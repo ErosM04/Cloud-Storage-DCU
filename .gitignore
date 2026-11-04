@@ -3,6 +3,13 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Custom Files and Direcotries to ignore
+credentials.json
+token.json
+folder_ids.json
+downloads
+compressed
+
 # C extensions
 *.so
 
