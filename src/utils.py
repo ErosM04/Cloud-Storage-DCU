@@ -1,15 +1,19 @@
 import shutil
 import os
+import re
+import json
+import random
+from compressor import print_lock
 
 
 def clean_directory(directory):
-        """Removes the given directory and its content."""
-        print(f"Removing '{directory}' folder...")
-        
-        if os.path.exists(directory):
-            shutil.rmtree(directory)
+    """Removes the given directory and its content."""
+    print(f"Removing '{directory}' folder...")
+    
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
 
-        print("Folder removed")
+    print("Folder removed")
 
 
 def format_duration(duration):
@@ -30,3 +34,151 @@ def format_duration(duration):
         minutes = int((duration % 3600) // 60)
         seconds = duration % 60
         return f"{hours}h {minutes}m {seconds}s"
+
+
+def sanitize_name(name):
+    r"""
+    Replaces illegal Windows file/folder characters with an underscore.
+    Illegal characters: < > : " / \ | ? *
+    """
+    return re.sub(r'[<>:"/\\|?*]', '_', name)
+
+
+def print_compression_result(result_data):
+    """Prints information regarding the results of a file compression."""
+    try:
+        with print_lock:
+            if result_data.compression_success:
+                print(f"\n{result_data.start_spacing}▶️ ✅🗜️ '{result_data.file_name}' took "
+                      f"{format_duration(result_data.compression_duration)} to compress from "
+                      f"{result_data.original_size}KB to {result_data.compressed_size}KB ({result_data.get_compression_percentage()}%)")
+            else:
+                print(f"\n{result_data.start_spacing}▶️ ⚠️🗜️ Background compression task failed "
+                      f"for {result_data.file_name}: {result_data.error_message}")
+            
+    except Exception as e:
+        with print_lock:
+            print(f"\n{result_data.start_spacing}▶️ 🔴🗜️ Background compression thread crashed: {e}")
+
+
+def print_upload_result(future):
+    """Prints information regarding the results of a file upload."""
+    try:
+        result_data = future.result()
+
+        with print_lock:
+            if result_data.upload_success:
+                print(f"\n{result_data.start_spacing}▶️ ✅☁️ '{result_data.file_name}' successfully uploaded!")
+            else:
+                print(f"\n{result_data.start_spacing}▶️ ⚠️☁️ Background upload task failed for {result_data.file_name}: {result_data.up_err_mes}")
+            
+    except Exception as e:
+        with print_lock:
+            print(f"\n{result_data.start_spacing}▶️ 🔴☁️ Background upload thread crashed: {e}")
+
+
+def delete_folders_at_end(list_futures,
+                          download_dir, 
+                          compressed_dir, 
+                          delete: bool,
+                          delete_d: bool,
+                          delete_c: bool,
+                          upload: bool):
+    """Deletes the downloads and compressed folders based on the given parameters."""
+    fail_comp = False
+    fail_up = False
+    for element in list_futures:
+        res = element.result()
+        if res.compression_success is False:
+            fail_comp = True
+        if upload and getattr(res, 'upload_success', False) is False:
+            fail_up = True
+        if (fail_comp and upload is False) or (fail_comp and fail_up):
+            break
+    
+    if delete and upload and not fail_comp and not fail_up:
+        clean_directory(download_dir)
+        clean_directory(compressed_dir)
+    elif delete_d and not fail_comp and (not upload or (upload and not fail_up)):
+        clean_directory(download_dir)
+    elif delete_c and upload and not fail_comp and not fail_up:
+        clean_directory(compressed_dir)
+
+
+def print_final_statistics(data_list, upload: bool):
+    """Calculates and displays summary statistics of compressions and uploads."""
+    total_time = 0
+    successful_compressions = 0
+    successful_uploads = 0
+    failed_compressions = 0
+    failed_uploads = 0
+    total_compression = 0
+    w_total_compression = 0
+    weights_sum = 0
+
+    for element in data_list:
+        result_data = element.result()
+        if result_data.compression_success:
+            successful_compressions += 1
+            total_time += result_data.compression_duration
+            total_compression += result_data.get_compression_percentage()
+            w_total_compression += result_data.get_compression_percentage() * result_data.compressed_size
+            weights_sum += result_data.compressed_size
+
+            if upload:
+                if getattr(result_data, 'upload_success', False):
+                    successful_uploads += 1
+                else:
+                    failed_uploads += 1
+        else:
+            failed_compressions += 1
+
+    print("\n\n📊 --- FINAL STATISTICS ---")
+    print(f"Total PDFs processed: {len(data_list)}")
+    print(f"✅🗜️ Successful compressions: {successful_compressions}")
+    print(f"❌🗜️ Failed compressions: {failed_compressions}")
+    if upload:
+        print(f"✅☁️ Successful uploads: {successful_uploads}")
+        print(f"❌☁️ Failed uploads: {failed_uploads}")
+
+    if successful_compressions > 0:
+        print(f"\n🕑 Total time compressing: {format_duration(total_time)}")
+        print(f"⏱️ Average time per PDF: {format_duration(total_time / successful_compressions)}")
+        print(f"📉 Average compressed size: {(total_compression / successful_compressions):.2f}%")
+        if weights_sum > 0:
+            print(f"⚖️📉 Normalized weighted average compressed size: {(w_total_compression / weights_sum):.2f}%")
+    else:
+        print("\n😢 No files were successfully compressed.")
+        if random.randint(1, 100) <= 5:
+            print("No PDF-files, Jeffry is sad 😢")
+
+
+def read_folders_ids(location, provider='drive'):
+    """Reads a JSON file containing all the folder IDs for the selected provider."""
+    if not os.path.exists(location) or os.path.getsize(location) == 0:
+        print(f"Folder IDs file '{location}' not found or empty.")
+        return None
+    
+    data = None
+    with open(location, "r", encoding="utf-8") as file:
+        try:
+            data = json.load(file)
+        except json.JSONDecodeError:
+            print(f"The folder IDs file '{location}' exists but does not contain a valid JSON.")
+            return None
+
+    if not isinstance(data, dict):
+        print(f"The folder IDs file '{location}' must contain a JSON object.")
+        return None
+
+    # Check for provider-specific key: e.g. "drive" or "mega"
+    provider_key = 'drive' if provider in ['drive', 'gdrive', 'google'] else 'mega'
+    if provider_key in data and isinstance(data[provider_key], list):
+        return [str(fid) for fid in data[provider_key]]
+
+    # Fallback to general "ids" key
+    if "ids" in data and isinstance(data["ids"], list):
+        return [str(fid) for fid in data["ids"]]
+
+    print(f"No folder IDs listed for '{provider_key}' in '{location}'")
+    return None

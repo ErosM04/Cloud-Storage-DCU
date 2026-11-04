@@ -4,7 +4,7 @@ from googleapiclient.http import MediaFileUpload
 
 def replace_file_on_drive(creds, file_id, file_path, file_name, start_spacing):
     """Uploads the compressed file back to Google Drive, overwriting the original file's content, thus preserving the orginal ID.
-    Returns a list containg the boolean result and, if it fails, the error message."""
+    Returns a list containing the boolean result and, if it fails, the error message."""
     
     # Create a fresh, thread-safe connection to Google Drive for this specific upload
     service = build('drive', 'v3', credentials=creds)

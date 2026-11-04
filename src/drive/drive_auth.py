@@ -4,7 +4,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # Scopes required for downloading from Google Drive
-SCOPES = ['https://www.googleapis.com/auth/drive'] # Add '.readonly' for read only permission
+SCOPES = ['https://www.googleapis.com/auth/drive']  # Add '.readonly' for read only permission
 
 
 def authenticate_gdrive():
