@@ -1,27 +1,32 @@
 # Cloud-Storage-DCU
-Python script to retrieve PDF files from Google Drive or MEGA cloud storage folders, compress them with [Ghostscript](https://www.ghostscript.com/) and re-upload them back to the cloud.
+Python script to retrieve files (PDFs, images, and videos) from Google Drive or MEGA cloud storage folders, compress them with dedicated compression engines ([Ghostscript](https://www.ghostscript.com/) for PDFs, [Pillow](https://python-pillow.org/) for images, and [FFmpeg](https://ffmpeg.org/) with GPU acceleration for videos), and re-upload them back to the cloud.
 
 The upload functionality (if used) will:
-- **Google Drive**: Overwrite the content of the original Google Drive PDF with the compressed version, preserving the original file ID and links.
+- **Google Drive**: Overwrite the content of the original Google Drive file with the compressed version, preserving the original file ID, links, and MIME type.
 - **MEGA**: Replace the original uncompressed file in the folder (default) or keep both files by appending `" cmp"` to the compressed filename (using `--keep-original` / `-kb`).
 
 > [!NOTE]
-> This script and its guide were created and tested only on a Windows system, so they probably won't work on other systems. 
+> This script and its guide were created and tested on Windows, with automatic hardware GPU acceleration detection (NVIDIA NVENC, Intel Quick Sync, AMD AMF) and CPU software fallback. 
 
 
 ## Index
 1. [Setup](#setup)
     - 1.1 [**Cloud-Storage-DCU**](#cloud-storage-dcu-1)
     - 1.2 [Python](#python)
-    - 1.3 [Ghostscript](#ghostscript)
-    - 1.4 [Google Drive Setup (Optional)](#google-drive-setup-optional)
-    - 1.5 [MEGA Setup (Optional)](#mega-setup-optional)
-2. [How To Use](#how-to-use)
-    - 2.1 [Command Structure](#command-structure)
-    - 2.2 [Provide the Folders IDs / Handles](#provide-the-folders-ids--handles)
-    - 2.3 [Parameters & Options](#parameters--options)
-    - 2.4 [Examples](#examples)
-3. [Common Errors](#common-errors)
+    - 1.3 [Ghostscript (PDF Compression)](#ghostscript-pdf-compression)
+    - 1.4 [Pillow & FFmpeg (Image & Video Compression)](#pillow--ffmpeg-image--video-compression)
+    - 1.5 [Google Drive Setup (Optional)](#google-drive-setup-optional)
+    - 1.6 [MEGA Setup (Optional)](#mega-setup-optional)
+2. [File Extensions Configuration](#file-extensions-configuration)
+    - 2.1 [Option 1: Command-Line Flag (`-e` / `--ext`)](#option-1-command-line-flag--e----ext)
+    - 2.2 [Option 2: Fallback File (`extension.json`)](#option-2-fallback-file-extensionjson)
+3. [How To Use](#how-to-use)
+    - 3.1 [Command Structure](#command-structure)
+    - 3.2 [Provide the Folders IDs / Handles](#provide-the-folders-ids--handles)
+    - 3.3 [Parameters & Options](#parameters--options)
+    - 3.4 [Examples](#examples)
+4. [Project Architecture](#project-architecture)
+5. [Common Errors](#common-errors)
 
 
 ## Setup
@@ -50,7 +55,7 @@ C:\Users\{username}\AppData\Local\Programs\Python\Launcher\
 Then save and reopen the terminal to verify that the command works.
 
 
-### Ghostscript
+### Ghostscript (PDF Compression)
 Install the compression tool [Ghostscript AGPL](https://ghostscript.com/releases/gsdnld.html) and then go to ``Modify System Environment Variables > Environment Variables > PATH`` and add the following line:
 ```
 C:\Program Files\gs\gs{version}\bin
@@ -61,13 +66,29 @@ Then close and reopen the terminal and run the following command:
 ```shell
 gswin64c --version
 ```
-If you get prompted with the Ghostscript version it is installed and properly working for our use case. Eventually you can try with ``gs --version``. If this is the case you may need to change the command used by the script, see [Common Errors](#common-errors).
+If you get prompted with the Ghostscript version it is installed and properly working for our use case.
+
+
+### Pillow & FFmpeg (Image & Video Compression)
+To compress images and videos:
+1. **Pillow** (Images: JPEG, PNG, WEBP, GIF, TIFF, BMP, etc.):
+   ```shell
+   py -m pip install Pillow
+   ```
+   *(Optional for HEIC/AVIF: `py -m pip install pillow-heif`)*
+2. **FFmpeg** (Videos: MP4, MKV, MOV, AVI, WEBM, etc. with GPU acceleration):
+   Ensure `ffmpeg` is installed and available in your `PATH`.
+   Check it with:
+   ```shell
+   ffmpeg -version
+   ```
+   The video compressor automatically detects hardware GPU encoders (`h264_nvenc` for NVIDIA, `h264_qsv` for Intel Quick Sync, `h264_amf` for AMD, `h264_mf` for MediaFoundation) and seamlessly falls back to CPU `libx264` if no GPU encoder is supported.
 
 
 ### Google Drive Setup (Optional)
 If you plan to use Google Drive:
 ```shell
-pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+py -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 ```
 
 > [!WARNING]
@@ -90,6 +111,41 @@ If you plan to use MEGA:
 py -m pip install mega.py pycryptodome tenacity
 ```
 *No API console setup is required for MEGA!* When running the script with `mega`, it will prompt for your MEGA account email and password directly in the terminal (with hidden password input). You can also optionally set `MEGA_EMAIL` and `MEGA_PASSWORD` environment variables.
+
+
+## File Extensions Configuration
+You can specify which file types (PDF, PNG, JPG, MP4, etc.) the program should download and compress using two methods:
+
+### Option 1: Command-Line Flag (`-e` / `--ext`)
+Pass the exact extension names directly in the execution command:
+```shell
+# Single extension:
+py .\src\main.py drive FolderID -e pdf
+
+# Multiple extensions (space-separated or comma-separated):
+py .\src\main.py mega FolderName -e pdf png jpg mp4
+py .\src\main.py drive FolderID -e "pdf,png,webp"
+```
+
+### Option 2: Fallback File (`extension.json`)
+If no `-e` / `--ext` parameter is passed in the command line, the program automatically falls back to reading `extension.json` located in the project root:
+```json
+{
+  "extensions": [
+    "pdf",
+    "png",
+    "jpg",
+    "jpeg",
+    "webp",
+    "mp4",
+    "mkv",
+    "mov"
+  ]
+}
+```
+*(Or simply a JSON array: `["pdf", "png", "mp4"]`).*
+
+If neither the CLI flag nor `extension.json` is specified, the script defaults to operating on all supported extensions.
 
 
 ## How To Use
@@ -135,11 +191,12 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
 ### Parameters & Options
 
 #### Common Parameters (Drive & MEGA):
+- `-e`, `--ext`, `--extension`, `--extensions`: Specify one or more file extensions to operate on (e.g. `-e pdf` or `-e png jpg mp4`). If omitted, reads from `extension.json`.
 - `-c`, `--clean`: Delete existing downloaded and compressed folders before starting (`downloads_drive`/`compressed_drive` for Google Drive or `downloads_mega`/`compressed_mega` for MEGA).
 - ``-r``, ``--recursive``: Recursively search and download files from all subfolders.
 - ``--rd``, ``--recursive-depth`` ``RD``: Recursively search and download files from all subfolders up to a given depth (``RD``).
 - ``-u``, ``--upload``: Uploads the compressed files back to cloud storage.
-- ``--pf``, ``--pdfs-first``: Process all PDF files in the current folder before diving into subfolders.
+- ``--pf``, ``--pdfs-first``: Process all files in the current folder before diving into subfolders.
 - ``-n``, ``--number-of-files`` ``N``: Limit the maximum amount of files processed.
 - ``-d``, ``--delete``: Deletes all downloaded and compressed files after successful upload (requires ``-u``).
 - ``-dd``, ``--delete-downloads``: Deletes all downloaded files after successful compression or upload.
@@ -154,9 +211,13 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
 ### Examples
 
 #### Google Drive Examples:
-- Download and compress all PDFs in a Drive folder:
+- Download and compress all targeted files in a Drive folder:
     ```shell
     py .\src\main.py drive 1A2Bv3C4dz5E6F
+    ```
+- Compress only images (PNG, JPG) and videos (MP4):
+    ```shell
+    py .\src\main.py drive 1A2Bv3C4dz5E6F -e png jpg mp4 -r
     ```
 - Recursive processing with upload and cleanup:
     ```shell
@@ -164,9 +225,13 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
     ```
 
 #### MEGA Examples:
-- Download and compress all PDFs from a MEGA folder:
+- Download and compress all targeted files from a MEGA folder:
     ```shell
     py .\src\main.py mega Invoices -r
+    ```
+- Target only PDF and WEBP files:
+    ```shell
+    py .\src\main.py mega Invoices -e pdf webp -r
     ```
 - Download, compress, and replace original files on MEGA:
     ```shell
@@ -180,6 +245,47 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
     ```shell
     py .\src\main.py mega -r -u -t 6
     ```
+
+
+## Project Architecture
+The project is structured with modularity as a primary goal:
+```
+Cloud-Storage-DCU/
+├── extension.json                    # Default target file extensions (fallback)
+├── folder_ids.json                   # Cloud folder IDs configuration
+├── src/
+│   ├── main.py                       # CLI entry point and provider dispatcher
+│   ├── flags.py                      # Argument parser (-e, -c, -r, -u, etc.)
+│   ├── utils.py                      # Extension resolver, statistics, cleanup
+│   ├── processed_file_data.py        # Standardized file compression result class
+│   ├── compression_logic/            # Modular compression engine
+│   │   ├── route_compression.py      # Central extension-based router
+│   │   ├── pdf/
+│   │   │   └── pdf_compressor.py     # Ghostscript PDF compression
+│   │   ├── image/
+│   │   │   └── image_compressor.py   # Pillow image compression (JPEG, PNG, WEBP, etc.)
+│   │   └── video/
+│   │       └── video_compressor.py   # FFmpeg video compression with GPU acceleration
+│   ├── drive/                        # Google Drive module
+│   │   ├── drive_auth.py             # OAuth2 authentication
+│   │   ├── drive_downloader.py       # Async downloader calling route_compression
+│   │   ├── drive_uploader.py         # In-place file updater with dynamic MIME detection
+│   │   └── drive_main.py             # Google Drive orchestration
+│   └── mega_dcu/                     # MEGA cloud module
+│       ├── mega_auth.py              # MEGA authentication prompt
+│       ├── mega_downloader.py        # Chunked downloader calling route_compression
+│       ├── mega_uploader.py          # Uploader with optional original file retention
+│       └── mega_main.py              # MEGA orchestration
+```
+
+### Compression Routing Workflow
+1. The downloader (`drive_downloader.py` or `mega_downloader.py`) receives a downloaded file.
+2. It invokes `route_compress(input_path, output_path)` in `src/compression_logic/route_compression.py`.
+3. `route_compression.py` inspects the file extension:
+   - `.pdf` -> dispatched to `src/compression_logic/pdf/pdf_compressor.py`
+   - `.png`, `.jpg`, `.jpeg`, `.webp`, `.tiff`, etc. -> dispatched to `src/compression_logic/image/image_compressor.py`
+   - `.mp4`, `.mkv`, `.mov`, `.avi`, etc. -> dispatched to `src/compression_logic/video/video_compressor.py`
+4. The compressor returns a unified `ProcessedFileData` object containing the duration, original size, compressed size, and compression success status.
 
 
 ## Common Errors

@@ -3,7 +3,10 @@ import os
 import re
 import json
 import random
-from compressor import print_lock
+import threading
+
+# A lock to prevent background threads from corrupting terminal output when printing
+print_lock = threading.Lock()
 
 
 def clean_directory(directory):
@@ -134,7 +137,7 @@ def print_final_statistics(data_list, upload: bool):
             failed_compressions += 1
 
     print("\n\n📊 --- FINAL STATISTICS ---")
-    print(f"Total PDFs processed: {len(data_list)}")
+    print(f"Total files processed: {len(data_list)}")
     print(f"✅🗜️ Successful compressions: {successful_compressions}")
     print(f"❌🗜️ Failed compressions: {failed_compressions}")
     if upload:
@@ -143,14 +146,14 @@ def print_final_statistics(data_list, upload: bool):
 
     if successful_compressions > 0:
         print(f"\n🕑 Total time compressing: {format_duration(total_time)}")
-        print(f"⏱️ Average time per PDF: {format_duration(total_time / successful_compressions)}")
+        print(f"⏱️ Average time per file: {format_duration(total_time / successful_compressions)}")
         print(f"📉 Average compressed size: {(total_compression / successful_compressions):.2f}%")
         if weights_sum > 0:
             print(f"⚖️📉 Normalized weighted average compressed size: {(w_total_compression / weights_sum):.2f}%")
     else:
         print("\n😢 No files were successfully compressed.")
         if random.randint(1, 100) <= 5:
-            print("No PDF-files, Jeffry is sad 😢")
+            print("No files compressed, Jeffry is sad 😢")
 
 
 def read_folders_ids(location, provider='drive'):
@@ -182,3 +185,97 @@ def read_folders_ids(location, provider='drive'):
 
     print(f"No folder IDs listed for '{provider_key}' in '{location}'")
     return None
+
+
+def normalize_extension_list(extensions):
+    """
+    Takes a string, list of strings, or collection of file extensions,
+    and returns a clean set of normalized extensions (lowercase, without leading dot).
+    Handles comma-separated values like 'png,jpg' or '.png'.
+    """
+    if not extensions:
+        return set()
+
+    if isinstance(extensions, str):
+        extensions = [extensions]
+
+    cleaned = set()
+    for item in extensions:
+        if not item:
+            continue
+        # Split by comma in case user passed "pdf,png"
+        parts = str(item).split(',')
+        for part in parts:
+            trimmed = part.strip().lstrip('.').lower()
+            if trimmed:
+                cleaned.add(trimmed)
+    return cleaned
+
+
+def load_configured_extensions(config_filename="extension.json"):
+    """
+    Attempts to read extension list from a JSON file.
+    Checks config_filename, and also looks in project root.
+    Supports either:
+      - A JSON array: ["pdf", "png", "jpg"]
+      - A JSON object: {"extensions": ["pdf", "png", "jpg"]}
+    Returns a set of normalized extensions or None if file doesn't exist or is invalid.
+    """
+    candidates = [
+        config_filename,
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), config_filename),
+        "extensions.json",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "extensions.json")
+    ]
+
+    found_path = None
+    for cand in candidates:
+        if os.path.exists(cand) and os.path.getsize(cand) > 0:
+            found_path = cand
+            break
+
+    if not found_path:
+        return None
+
+    try:
+        with open(found_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if isinstance(data, list):
+            return normalize_extension_list(data)
+        elif isinstance(data, dict):
+            for key in ["extensions", "extension", "exts", "ext"]:
+                if key in data and isinstance(data[key], list):
+                    return normalize_extension_list(data[key])
+        print(f"⚠️ Warning: '{found_path}' does not contain an extension list or valid 'extensions' key.")
+        return None
+    except Exception as e:
+        print(f"⚠️ Warning: Error reading '{found_path}': {e}")
+        return None
+
+
+def resolve_target_extensions(cli_extensions=None, config_filename="extension.json"):
+    """
+    Resolves the active target extensions:
+    1. If specified via CLI (cli_extensions), uses those.
+    2. Otherwise, falls back to config_filename (default: 'extension.json').
+    3. If neither is available, defaults to all supported extensions.
+    """
+    from compression_logic.route_compression import get_all_supported_extensions
+
+    if cli_extensions:
+        normalized_cli = normalize_extension_list(cli_extensions)
+        if normalized_cli:
+            print(f"🎯 Target extensions specified via CLI: {', '.join(sorted(normalized_cli))}")
+            return normalized_cli
+
+    # Fallback to extension.json
+    configured = load_configured_extensions(config_filename)
+    if configured:
+        print(f"📄 Target extensions loaded from '{config_filename}': {', '.join(sorted(configured))}")
+        return configured
+
+    # Final fallback: all supported
+    all_exts = get_all_supported_extensions()
+    print(f"ℹ️ No extension specified. Operating on all supported extensions: {', '.join(sorted(all_exts))}")
+    return all_exts

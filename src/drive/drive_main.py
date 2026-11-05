@@ -7,15 +7,15 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from compressor import compress_pdf_ghostscript
-from utils import clean_directory, delete_folders_at_end, print_final_statistics
+from compression_logic.route_compression import route_compress
+from utils import clean_directory, delete_folders_at_end, print_final_statistics, resolve_target_extensions
 
 from drive.drive_auth import authenticate_gdrive
 from drive.drive_downloader import process_folder
 from googleapiclient.discovery import build
 
 
-def main_drive(folder_ids_list, args, download_dir="downloads_drive", compressed_dir="compressed_drive"):
+def main_drive(folder_ids_list, args, target_extensions=None, download_dir="downloads_drive", compressed_dir="compressed_drive"):
     """Setup the Google Drive service and cycles all the given folders."""
     if not folder_ids_list:
         print("⚠️ No Google Drive folder IDs provided to process.")
@@ -26,6 +26,10 @@ def main_drive(folder_ids_list, args, download_dir="downloads_drive", compressed
         clean_directory(download_dir)
         clean_directory(compressed_dir)
     
+    # Resolve target extensions if not passed
+    if target_extensions is None:
+        target_extensions = resolve_target_extensions(getattr(args, 'ext', None))
+
     # Setup Google Drive service
     creds = authenticate_gdrive()
     service = build('drive', 'v3', credentials=creds)
@@ -37,7 +41,8 @@ def main_drive(folder_ids_list, args, download_dir="downloads_drive", compressed
             "creds": creds,
             "service": service, 
             "executor": executor,
-            "compress_func": compress_pdf_ghostscript,
+            "compress_func": route_compress,
+            "target_extensions": target_extensions,
             "current_download_dir": download_dir,
             "current_compressed_dir": compressed_dir,
             "recursive": args.recursive,

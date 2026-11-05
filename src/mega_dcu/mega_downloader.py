@@ -19,6 +19,7 @@ from mega.mega import (
 )
 
 from utils import format_duration, sanitize_name, print_compression_result, print_upload_result
+from compression_logic.route_compression import is_file_eligible, route_compress
 
 from mega_dcu.mega_uploader import upload_file_to_mega
 
@@ -136,13 +137,17 @@ def download_mega_pdf(mega_client, file_node, dest_dir, file_name, start_spacing
     return file_path
 
 
+download_mega_file = download_mega_pdf
+
+
 def process_mega_folder(mega_client,
                         executor,
-                        compress_func,
-                        folder_id,
-                        current_download_dir,
-                        current_compressed_dir,
+                        compress_func=route_compress,
+                        folder_id=None,
+                        current_download_dir="downloads_mega",
+                        current_compressed_dir="compressed_mega",
                         all_nodes=None,
+                        target_extensions=None,
                         recursive=False,
                         recursive_depth=None,
                         pdfs_first=False,
@@ -152,7 +157,7 @@ def process_mega_folder(mega_client,
                         cmp_suffix=" cmp",
                         start_spacing=BASE_SPACING):
     """
-    Recursively processes MEGA folders to find and download PDFs,
+    Recursively processes MEGA folders to find and download targeted files,
     compresses them with background threads, and optionally uploads them back.
     """
     os.makedirs(current_download_dir, exist_ok=True)
@@ -203,6 +208,7 @@ def process_mega_folder(mega_client,
                     current_download_dir=new_download_dir,
                     current_compressed_dir=new_compressed_dir,
                     all_nodes=all_nodes,
+                    target_extensions=target_extensions,
                     recursive=recursive,
                     recursive_depth=next_depth,
                     pdfs_first=pdfs_first,
@@ -219,8 +225,8 @@ def process_mega_folder(mega_client,
                 print(f"\n{start_spacing}▶️ Skipped Subfolder (run with -r to include): {item_name}/")
             continue
 
-        # PDF files handling
-        if node_type == 0 and item_name.lower().endswith('.pdf'):
+        # File handling based on target extensions
+        if node_type == 0 and is_file_eligible(item_name, target_extensions):
             if file_limit is not None:
                 file_limit -= 1
 
@@ -257,7 +263,7 @@ def process_mega_folder(mega_client,
                 future.add_done_callback(print_upload_result)
             futures.append(future)
         elif node_type == 0:
-            print(f"{start_spacing}  ▶️ Skipped compression (not a PDF): {item_name}")
+            print(f"{start_spacing}  ▶️ Skipped (extension not targeted): {item_name}")
 
     return futures
 

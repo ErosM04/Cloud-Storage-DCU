@@ -3,8 +3,8 @@ import io
 import re
 from googleapiclient.http import MediaIoBaseDownload
 
-from utils import format_duration, sanitize_name, print_compression_result, print_upload_result
-from compressor import print_lock
+from utils import format_duration, sanitize_name, print_compression_result, print_upload_result, print_lock
+from compression_logic.route_compression import is_file_eligible, route_compress
 
 from drive.drive_uploader import replace_file_on_drive
 
@@ -14,17 +14,18 @@ BASE_SPACING = "   "  # Space increase between subfolders' prints
 def process_folder(creds,
                    service,
                    executor,
-                   compress_func,
-                   folder_id,
-                   current_download_dir,
-                   current_compressed_dir,
+                   compress_func=route_compress,
+                   folder_id=None,
+                   current_download_dir="downloads_drive",
+                   current_compressed_dir="compressed_drive",
+                   target_extensions=None,
                    recursive=False,
                    recursive_depth=0,
                    pdfs_first=False,
                    file_limit=None,
                    upload=False,
                    start_spacing=BASE_SPACING):
-    """Recursively processes Drive folders to find and download PDF, then compresses them with background threads 
+    """Recursively processes Drive folders to find and download targeted files, then compresses them with background threads 
     and if upload is True, sends them back to Drive."""
     # Ensure the local directories exist to mirror the Google Drive structure
     os.makedirs(current_download_dir, exist_ok=True)
@@ -73,6 +74,7 @@ def process_folder(creds,
                         folder_id=file_id, 
                         current_download_dir=new_download_dir,
                         current_compressed_dir=new_compressed_dir,
+                        target_extensions=target_extensions,
                         recursive=recursive,
                         recursive_depth=recursive_depth - 1,
                         pdfs_first=pdfs_first,
@@ -91,8 +93,8 @@ def process_folder(creds,
             elif "application/vnd.google-apps" in mime_type:
                 continue
 
-            # PDF files handling
-            if file_name.lower().endswith('.pdf') or mime_type == 'application/pdf':              
+            # Check if file has an eligible extension
+            if is_file_eligible(file_name, target_extensions):              
                 if file_limit is not None:
                     file_limit -= 1
 
@@ -118,7 +120,7 @@ def process_folder(creds,
                     future.add_done_callback(print_upload_result)
                 futures.append(future)
             else:
-                print(f"{start_spacing}  ▶️ Skipped compression (not a PDF): {file_name}")
+                print(f"{start_spacing}  ▶️ Skipped (extension not targeted): {file_name}")
                 pass
 
         page_token = results.get('nextPageToken', None)

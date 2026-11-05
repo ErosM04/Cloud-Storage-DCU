@@ -20,4 +20,6 @@ class ProcessedFileData:
 
     def get_compression_percentage(self):
         """Returns the % of space occupied by the compressed file in relation to the original file."""
-        return round((100 * (self.compressed_size / 1024)) / (self.original_size / 1024), 2)
+        if not self.original_size or self.original_size == 0:
+            return 0.0
+        return round((100 * self.compressed_size) / self.original_size, 2)

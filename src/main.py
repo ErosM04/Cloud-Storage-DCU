@@ -10,7 +10,7 @@ if sys.platform == "win32":
         pass
 
 from flags import get_args
-from utils import read_folders_ids
+from utils import read_folders_ids, resolve_target_extensions
 
 FOLDER_IDS_LOCATION = "folder_ids.json"
 
@@ -28,6 +28,9 @@ def run():
         if not folder_ids:
             return
 
+    # Resolve target file extensions (from CLI flags, extension.json, or fallback to all supported)
+    target_extensions = resolve_target_extensions(args.ext)
+
     # Dispatch to the chosen cloud provider with provider-specific folder names
     if args.provider == 'drive':
         try:
@@ -42,7 +45,13 @@ def run():
                 import traceback
                 traceback.print_exc()
             return
-        main_drive(folder_ids, args=args, download_dir="downloads_drive", compressed_dir="compressed_drive")
+        main_drive(
+            folder_ids,
+            args=args,
+            target_extensions=target_extensions,
+            download_dir="downloads_drive",
+            compressed_dir="compressed_drive"
+        )
 
     elif args.provider == 'mega':
         try:
@@ -61,7 +70,13 @@ def run():
                 import traceback
                 traceback.print_exc()
             return
-        main_mega(folder_ids, args=args, download_dir="downloads_mega", compressed_dir="compressed_mega")
+        main_mega(
+            folder_ids,
+            args=args,
+            target_extensions=target_extensions,
+            download_dir="downloads_mega",
+            compressed_dir="compressed_mega"
+        )
 
 
 if __name__ == '__main__':

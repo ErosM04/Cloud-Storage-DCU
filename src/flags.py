@@ -22,7 +22,7 @@ def get_args():
         sys.exit(1)
 
     parser = argparse.ArgumentParser(
-        description="Download, asynchronously compress and re-upload PDFs from Google Drive or MEGA cloud storage.",
+        description="Download, asynchronously compress and re-upload files (PDFs, images, videos) from Google Drive or MEGA cloud storage.",
         formatter_class=argparse.RawTextHelpFormatter
     )
 
@@ -41,7 +41,7 @@ def get_args():
         aliases=["gdrive", "google"],
         parents=[common_parser],
         help="Process Google Drive folders",
-        description="Download, asynchronously compress and re-upload PDFs from Google Drive."
+        description="Download, asynchronously compress and re-upload files from Google Drive."
     )
 
     # Subparser for MEGA
@@ -49,7 +49,7 @@ def get_args():
         "mega",
         parents=[common_parser],
         help="Process MEGA cloud storage folders",
-        description="Download, asynchronously compress and re-upload PDFs from MEGA cloud storage."
+        description="Download, asynchronously compress and re-upload files from MEGA cloud storage."
     )
     setup_mega_flags(mega_parser)
 
@@ -74,6 +74,13 @@ def setup_common_flags(parser: argparse.ArgumentParser):
                         nargs='?',
                         default=None, 
                         help="The folder ID, handle, or name. If omitted, reads from the default file ('folder_ids.json').")
+
+    # -e / --ext / --extension / --extensions flag
+    parser.add_argument('-e', '--ext', '--extension', '--extensions',
+                        nargs='+',
+                        default=None,
+                        help="Specify one or more file extensions to operate on (e.g. -e pdf or -e png jpg mp4).\n"
+                             "If omitted, falls back to the list defined in 'extension.json'.")
 
     # -c / --clean flag
     parser.add_argument('-c', '--clean', 

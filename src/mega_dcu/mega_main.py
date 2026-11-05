@@ -7,14 +7,14 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from compressor import compress_pdf_ghostscript
-from utils import clean_directory, delete_folders_at_end, print_final_statistics
+from compression_logic.route_compression import route_compress
+from utils import clean_directory, delete_folders_at_end, print_final_statistics, resolve_target_extensions
 
 from mega_dcu.mega_auth import authenticate_mega
 from mega_dcu.mega_downloader import process_mega_folder, resolve_mega_folder
 
 
-def main_mega(folder_ids_list, args, download_dir="downloads_mega", compressed_dir="compressed_mega"):
+def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downloads_mega", compressed_dir="compressed_mega"):
     """Setup the MEGA client and cycles all the given folders."""
     if not folder_ids_list:
         print("⚠️ No MEGA folder IDs/names provided to process.")
@@ -25,6 +25,10 @@ def main_mega(folder_ids_list, args, download_dir="downloads_mega", compressed_d
         clean_directory(download_dir)
         clean_directory(compressed_dir)
     
+    # Resolve target extensions if not passed
+    if target_extensions is None:
+        target_extensions = resolve_target_extensions(getattr(args, 'ext', None))
+
     # Authenticate to MEGA (terminal prompt)
     mega_client = authenticate_mega()
 
@@ -45,11 +49,12 @@ def main_mega(folder_ids_list, args, download_dir="downloads_mega", compressed_d
             sub_futures = process_mega_folder(
                 mega_client=mega_client,
                 executor=executor,
-                compress_func=compress_pdf_ghostscript,
+                compress_func=route_compress,
                 folder_id=folder_id,
                 current_download_dir=download_dir,
                 current_compressed_dir=compressed_dir,
                 all_nodes=all_nodes,
+                target_extensions=target_extensions,
                 recursive=args.recursive,
                 recursive_depth=args.rd,
                 pdfs_first=args.pf,

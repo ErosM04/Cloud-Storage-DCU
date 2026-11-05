@@ -1,0 +1,12 @@
+{
+  "extensions": [
+    "pdf",
+    "png",
+    "jpg",
+    "jpeg",
+    "webp",
+    "mp4",
+    "mkv",
+    "mov"
+  ]
+}
