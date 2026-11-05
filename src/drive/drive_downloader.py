@@ -6,10 +6,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from utils import format_duration, sanitize_name, print_compression_result, print_upload_result
 from compressor import print_lock
 
-try:
-    from drive.drive_uploader import replace_file_on_drive
-except ImportError:
-    from drive_uploader import replace_file_on_drive
+from drive.drive_uploader import replace_file_on_drive
 
 BASE_SPACING = "   "  # Space increase between subfolders' prints
 

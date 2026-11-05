@@ -77,15 +77,17 @@ Go to the [Google Cloud Console](https://console.cloud.google.com/) and login wi
 
 Then:
 1. Create a new project.
-2. From the right panel go to ``APIs & Services > Library``, search for **"Google Drive API"**, select it and click **Enable**.
-3. Go to ``APIs & Services > Credentials`` and create **OAuth client ID** credentials (choose **"Desktop app"**).
-4. Download the JSON file, rename it to ``credentials.json`` and place it in the root folder of this project.
+2. From the project's panel go to ``APIs & Services > Library``, search for **"Google Drive API"**, select it and click **Enable**.
+3. Go to ``APIs & Services > Credentials`` and configure the **consent screen** if asked.
+4. Create **OAuth client ID** credentials (choose **"Desktop app"**).
+5. Download the JSON file, rename it to ``credentials.json`` and place it in the root folder of this project (not in ``/src``!!).
+6. In the project's panel go to ``Google Auth Platoform > Public`` and add your email to the **Test users**.
 
 
 ### MEGA Setup (Optional)
 If you plan to use MEGA:
 ```shell
-pip install mega.py pycryptodome tenacity
+py -m pip install mega.py pycryptodome tenacity
 ```
 *No API console setup is required for MEGA!* When running the script with `mega`, it will prompt for your MEGA account email and password directly in the terminal (with hidden password input). You can also optionally set `MEGA_EMAIL` and `MEGA_PASSWORD` environment variables.
 
@@ -182,6 +184,7 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
 
 ## Common Errors
 - **Request related error (Google Drive)**: Delete `token.json` and publish your OAuth app to Production mode in Google Cloud Console.
+- **Account access to project denied (Google Cloud Console)**: Go to the Google Cloude Console and open the preject you created, then in the project's panel go to ``Google Auth Platoform > Public`` and add your email to the **Test users**.
 - **Google Drive API not enabled**: Enable the Google Drive API in Google Cloud Console.
 - **Ghostscript command not found**: Ensure `gswin64c` is in PATH. If on Linux/macOS or your binary is named `gs`, change `ghostscript_cmd = "gswin64c"` to `"gs"` in `src/compressor.py`.
 - **MEGA Login Failed**: Ensure your MEGA email and password are correct.

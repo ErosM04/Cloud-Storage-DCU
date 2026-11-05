@@ -10,12 +10,8 @@ if parent_dir not in sys.path:
 from compressor import compress_pdf_ghostscript
 from utils import clean_directory, delete_folders_at_end, print_final_statistics
 
-try:
-    from mega.mega_auth import authenticate_mega
-    from mega.mega_downloader import process_mega_folder, resolve_mega_folder
-except ImportError:
-    from mega_auth import authenticate_mega
-    from mega_downloader import process_mega_folder, resolve_mega_folder
+from mega_dcu.mega_auth import authenticate_mega
+from mega_dcu.mega_downloader import process_mega_folder, resolve_mega_folder
 
 
 def main_mega(folder_ids_list, args, download_dir="downloads_mega", compressed_dir="compressed_mega"):

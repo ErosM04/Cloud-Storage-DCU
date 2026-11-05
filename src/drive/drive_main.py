@@ -10,14 +10,9 @@ if parent_dir not in sys.path:
 from compressor import compress_pdf_ghostscript
 from utils import clean_directory, delete_folders_at_end, print_final_statistics
 
-try:
-    from drive.drive_auth import authenticate_gdrive
-    from drive.drive_downloader import process_folder
-    from googleapiclient.discovery import build
-except ImportError:
-    from drive_auth import authenticate_gdrive
-    from drive_downloader import process_folder
-    from googleapiclient.discovery import build
+from drive.drive_auth import authenticate_gdrive
+from drive.drive_downloader import process_folder
+from googleapiclient.discovery import build
 
 
 def main_drive(folder_ids_list, args, download_dir="downloads_drive", compressed_dir="compressed_drive"):

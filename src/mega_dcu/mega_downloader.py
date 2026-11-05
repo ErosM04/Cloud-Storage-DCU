@@ -1,6 +1,13 @@
 import os
 import requests
+import asyncio
+import types
 from pathlib import Path
+
+# Compatibility shim for Python 3.11+ with tenacity < 6.0 (required by mega.py)
+if not hasattr(asyncio, 'coroutine'):
+    asyncio.coroutine = types.coroutine
+
 from mega.mega import (
     base64_to_a32,
     a32_to_str,
@@ -13,10 +20,7 @@ from mega.mega import (
 
 from utils import format_duration, sanitize_name, print_compression_result, print_upload_result
 
-try:
-    from mega.mega_uploader import upload_file_to_mega
-except ImportError:
-    from mega_uploader import upload_file_to_mega
+from mega_dcu.mega_uploader import upload_file_to_mega
 
 BASE_SPACING = "   "  # Space increase between subfolders' prints
 

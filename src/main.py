@@ -33,19 +33,33 @@ def run():
         try:
             from drive.drive_main import main_drive
         except ImportError as e:
-            print("❌ Error: Missing Google Drive dependencies.")
-            print("Please install them using:")
-            print("  pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib\n")
+            if getattr(e, 'name', None) in ['googleapiclient', 'google_auth_oauthlib', 'google']:
+                print("❌ Error: Missing Google Drive dependencies.")
+                print("Please install them for your active Python interpreter using:")
+                print("  py -m pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib\n")
+            else:
+                print(f"❌ Error loading Google Drive module: {e}\n")
+                import traceback
+                traceback.print_exc()
             return
         main_drive(folder_ids, args=args, download_dir="downloads_drive", compressed_dir="compressed_drive")
 
     elif args.provider == 'mega':
         try:
-            from mega.mega_main import main_mega
+            import asyncio
+            import types
+            if not hasattr(asyncio, 'coroutine'):
+                asyncio.coroutine = types.coroutine
+            from mega_dcu.mega_main import main_mega
         except ImportError as e:
-            print("❌ Error: Missing MEGA dependencies.")
-            print("Please install them using:")
-            print("  pip install mega.py pycryptodome tenacity\n")
+            if getattr(e, 'name', None) in ['mega', 'Crypto', 'tenacity']:
+                print("❌ Error: Missing MEGA dependencies.")
+                print("Please install them for your active Python interpreter using:")
+                print("  py -m pip install mega.py pycryptodome tenacity\n")
+            else:
+                print(f"❌ Error loading MEGA module: {e}\n")
+                import traceback
+                traceback.print_exc()
             return
         main_mega(folder_ids, args=args, download_dir="downloads_mega", compressed_dir="compressed_mega")
 
