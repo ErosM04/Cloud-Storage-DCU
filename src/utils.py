@@ -266,16 +266,16 @@ def resolve_target_extensions(cli_extensions=None, config_filename="extension.js
     if cli_extensions:
         normalized_cli = normalize_extension_list(cli_extensions)
         if normalized_cli:
-            print(f"🎯 Target extensions specified via CLI: {', '.join(sorted(normalized_cli))}")
+            print(f"🎯 Target extensions specified via CLI: {', '.join(sorted(normalized_cli))}\n")
             return normalized_cli
 
     # Fallback to extension.json
     configured = load_configured_extensions(config_filename)
     if configured:
-        print(f"📄 Target extensions loaded from '{config_filename}': {', '.join(sorted(configured))}")
+        print(f"📄 Target extensions loaded from '{config_filename}': {', '.join(sorted(configured))}\n")
         return configured
 
     # Final fallback: all supported
     all_exts = get_all_supported_extensions()
-    print(f"ℹ️ No extension specified. Operating on all supported extensions: {', '.join(sorted(all_exts))}")
+    print(f"ℹ️ No extension specified. Operating on all supported extensions: {', '.join(sorted(all_exts))}\n")
     return all_exts
