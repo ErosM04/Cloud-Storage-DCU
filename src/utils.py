@@ -39,12 +39,15 @@ def format_duration(duration):
         return f"{hours}h {minutes}m {seconds}s"
 
 
+_ILLEGAL_WIN_CHARS = re.compile(r'[<>:"/\\|?*]')
+
+
 def sanitize_name(name):
     r"""
     Replaces illegal Windows file/folder characters with an underscore.
     Illegal characters: < > : " / \ | ? *
     """
-    return re.sub(r'[<>:"/\\|?*]', '_', name)
+    return _ILLEGAL_WIN_CHARS.sub('_', name)
 
 
 def print_compression_result(result_data):

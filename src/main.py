@@ -34,7 +34,7 @@ def run():
     # Dispatch to the chosen cloud provider with provider-specific folder names
     if args.provider == 'drive':
         try:
-            from drive.drive_main import main_drive
+            from drive_dcu.drive_main import main_drive
         except ImportError as e:
             if getattr(e, 'name', None) in ['googleapiclient', 'google_auth_oauthlib', 'google']:
                 print("❌ Error: Missing Google Drive dependencies.")

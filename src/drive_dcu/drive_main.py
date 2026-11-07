@@ -10,8 +10,8 @@ if parent_dir not in sys.path:
 from compression_logic.route_compression import route_compress
 from utils import clean_directory, delete_folders_at_end, print_final_statistics, resolve_target_extensions
 
-from drive.drive_auth import authenticate_gdrive
-from drive.drive_downloader import process_folder
+from drive_dcu.drive_auth import authenticate_gdrive
+from drive_dcu.drive_downloader import process_folder
 from googleapiclient.discovery import build
 
 

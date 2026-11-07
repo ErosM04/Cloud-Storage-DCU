@@ -35,6 +35,17 @@ VIDEO_EXTENSIONS = {
     '.m2ts', '.3gp', '.3g2'
 }
 
+# Pre-computed O(1) dictionary mapping normalized extensions to categories
+EXTENSION_CATEGORY_MAP = {}
+for _ext in PDF_EXTENSIONS:
+    EXTENSION_CATEGORY_MAP[_ext.lstrip('.').lower()] = 'pdf'
+for _ext in IMAGE_EXTENSIONS:
+    EXTENSION_CATEGORY_MAP[_ext.lstrip('.').lower()] = 'image'
+for _ext in VIDEO_EXTENSIONS:
+    EXTENSION_CATEGORY_MAP[_ext.lstrip('.').lower()] = 'video'
+
+ALL_SUPPORTED_EXTENSIONS = set(EXTENSION_CATEGORY_MAP.keys())
+
 
 def normalize_ext(extension: str) -> str:
     """Normalizes an extension string (e.g. '.PNG', ' JPG ' -> 'png', 'jpg')."""
@@ -59,11 +70,7 @@ def extract_extension(filename_or_ext: str) -> str:
 
 def get_all_supported_extensions():
     """Returns a set of all supported file extensions without leading dots."""
-    all_exts = set()
-    for ext_set in (PDF_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS):
-        for e in ext_set:
-            all_exts.add(e.lstrip('.').lower())
-    return all_exts
+    return ALL_SUPPORTED_EXTENSIONS.copy()
 
 
 def get_category_for_extension(filename_or_ext: str):
@@ -72,21 +79,13 @@ def get_category_for_extension(filename_or_ext: str):
     or None if unsupported.
     """
     clean = extract_extension(filename_or_ext)
-    if not clean:
-        return None
-    norm = '.' + clean
-    if norm in PDF_EXTENSIONS:
-        return 'pdf'
-    if norm in IMAGE_EXTENSIONS:
-        return 'image'
-    if norm in VIDEO_EXTENSIONS:
-        return 'video'
-    return None
+    return EXTENSION_CATEGORY_MAP.get(clean)
 
 
 def is_supported_extension(filename_or_ext: str) -> bool:
-    """Checks whether the file extension is supported by any compressor."""
-    return get_category_for_extension(filename_or_ext) is not None
+    """Checks whether the file extension is supported by any compressor in O(1) time."""
+    clean = extract_extension(filename_or_ext)
+    return clean in EXTENSION_CATEGORY_MAP
 
 
 def is_file_eligible(filename: str, allowed_extensions=None) -> bool:
@@ -98,12 +97,13 @@ def is_file_eligible(filename: str, allowed_extensions=None) -> bool:
     if not clean_ext:
         return False
 
-    if allowed_extensions is not None and len(allowed_extensions) > 0:
-        normalized_allowed = {normalize_ext(e) for e in allowed_extensions if e}
-        return clean_ext in normalized_allowed
+    if allowed_extensions:
+        if isinstance(allowed_extensions, set):
+            return clean_ext in allowed_extensions
+        return clean_ext in {normalize_ext(e) for e in allowed_extensions if e}
 
     # Fallback to checking if it is supported at all
-    return is_supported_extension(clean_ext)
+    return clean_ext in EXTENSION_CATEGORY_MAP
 
 
 def route_compress(input_path: str, output_path: str, start_spacing: str = "") -> ProcessedFileData:
@@ -112,8 +112,8 @@ def route_compress(input_path: str, output_path: str, start_spacing: str = "") -
     based on the file extension.
     Returns ProcessedFileData.
     """
-    ext = os.path.splitext(input_path)[1].lower()
-    category = get_category_for_extension(ext)
+    clean = extract_extension(input_path)
+    category = EXTENSION_CATEGORY_MAP.get(clean)
 
     if category == 'pdf':
         return compress_pdf(input_path, output_path, start_spacing)
@@ -123,6 +123,7 @@ def route_compress(input_path: str, output_path: str, start_spacing: str = "") -
         return compress_video(input_path, output_path, start_spacing)
     else:
         orig = round(os.path.getsize(input_path) / 1024, 2) if os.path.exists(input_path) else 0
+        ext = os.path.splitext(input_path)[1].lower()
         return ProcessedFileData(
             file_name=os.path.basename(output_path),
             original_size=orig,

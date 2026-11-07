@@ -266,7 +266,7 @@ Cloud-Storage-DCU/
 │   │   │   └── image_compressor.py   # Pillow image compression (JPEG, PNG, WEBP, etc.)
 │   │   └── video/
 │   │       └── video_compressor.py   # FFmpeg video compression with GPU acceleration
-│   ├── drive/                        # Google Drive module
+│   ├── drive_dcu/                    # Google Drive module
 │   │   ├── drive_auth.py             # OAuth2 authentication
 │   │   ├── drive_downloader.py       # Async downloader calling route_compression
 │   │   ├── drive_uploader.py         # In-place file updater with dynamic MIME detection

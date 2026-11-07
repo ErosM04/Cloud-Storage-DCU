@@ -6,7 +6,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from utils import format_duration, sanitize_name, print_compression_result, print_upload_result, print_lock
 from compression_logic.route_compression import is_file_eligible, route_compress
 
-from drive.drive_uploader import replace_file_on_drive
+from drive_dcu.drive_uploader import replace_file_on_drive
 
 BASE_SPACING = "   "  # Space increase between subfolders' prints
 
@@ -41,6 +41,7 @@ def process_folder(creds,
         results = service.files().list(
             q=query, 
             spaces='drive',
+            pageSize=1000,
             fields="nextPageToken, files(id, name, mimeType)",
             pageToken=page_token
         ).execute()
@@ -104,7 +105,7 @@ def process_folder(creds,
                 file_path = os.path.join(current_download_dir, file_name)
                 
                 with io.FileIO(file_path, mode='wb') as fh:
-                    downloader = MediaIoBaseDownload(fh, request)
+                    downloader = MediaIoBaseDownload(fh, request, chunksize=8 * 1024 * 1024)
                     done = False
                     while not done:
                         status, done = downloader.next_chunk()
@@ -149,16 +150,7 @@ def background_pipeline(creds, input_path, output_path, original_file_id, compre
 
 
 def push_folders_to_tail(list_items):
-    """Takes a list and pushes to the tail all the Google Drive folder elements."""
-    index = 0
-    virtual_len = len(list_items)
-
-    while index < virtual_len:
-        if list_items[index]['mimeType'] == 'application/vnd.google-apps.folder':
-            list_items.append(list_items[index])
-            list_items.pop(index)
-            index -= 1
-            virtual_len -= 1
-        index += 1
-    
-    return list_items
+    """Takes a list and pushes to the tail all the Google Drive folder elements in linear O(N) time."""
+    files = [item for item in list_items if item.get('mimeType') != 'application/vnd.google-apps.folder']
+    folders = [item for item in list_items if item.get('mimeType') == 'application/vnd.google-apps.folder']
+    return files + folders

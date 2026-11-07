@@ -140,6 +140,17 @@ def download_mega_pdf(mega_client, file_node, dest_dir, file_name, start_spacing
 download_mega_file = download_mega_pdf
 
 
+def build_children_index(all_nodes):
+    """Indexes all MEGA nodes by their parent ID in O(N) time for instant O(1) folder queries."""
+    index = {}
+    for node in all_nodes.values():
+        parent = node.get('p')
+        if parent not in index:
+            index[parent] = []
+        index[parent].append(node)
+    return index
+
+
 def process_mega_folder(mega_client,
                         executor,
                         compress_func=route_compress,
@@ -147,6 +158,7 @@ def process_mega_folder(mega_client,
                         current_download_dir="downloads_mega",
                         current_compressed_dir="compressed_mega",
                         all_nodes=None,
+                        children_by_parent=None,
                         target_extensions=None,
                         recursive=False,
                         recursive_depth=None,
@@ -166,10 +178,13 @@ def process_mega_folder(mega_client,
     if all_nodes is None:
         all_nodes = mega_client.get_files()
 
+    if children_by_parent is None:
+        children_by_parent = build_children_index(all_nodes)
+
     futures = []
 
-    # Get all direct children of folder_id
-    items = [node for node in all_nodes.values() if node.get('p') == folder_id]
+    # Get all direct children of folder_id in O(1) time
+    items = children_by_parent.get(folder_id, [])
 
     if pdfs_first:
         # Move folders (type 1) after files (type 0)
@@ -208,6 +223,7 @@ def process_mega_folder(mega_client,
                     current_download_dir=new_download_dir,
                     current_compressed_dir=new_compressed_dir,
                     all_nodes=all_nodes,
+                    children_by_parent=children_by_parent,
                     target_extensions=target_extensions,
                     recursive=recursive,
                     recursive_depth=next_depth,

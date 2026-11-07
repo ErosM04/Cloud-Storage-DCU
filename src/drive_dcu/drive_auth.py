@@ -10,7 +10,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive']  # Add '.readonly' for read o
 
 def get_project_root():
     """Returns the absolute path to the project root directory."""
-    # src/drive/drive_auth.py -> src/drive -> src -> project root
+    # src/drive_dcu/drive_auth.py -> src/drive_dcu -> src -> project root
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -24,6 +24,8 @@ def find_credentials_file():
         os.path.join(os.getcwd(), 'credential.json'),
         os.path.join(project_root, 'src', 'credentials.json'),
         os.path.join(project_root, 'src', 'credential.json'),
+        os.path.join(project_root, 'src', 'drive_dcu', 'credentials.json'),
+        os.path.join(project_root, 'src', 'drive_dcu', 'credential.json'),
         os.path.join(project_root, 'src', 'drive', 'credentials.json'),
         os.path.join(project_root, 'src', 'drive', 'credential.json'),
     ]
