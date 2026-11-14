@@ -280,6 +280,7 @@ Cloud-Storage-DCU/
 │   │   └── drive_main.py             # Google Drive orchestration
 │   └── mega_dcu/                     # MEGA cloud module
 │       ├── mega_auth.py              # MEGA authentication prompt
+│       ├── mega_resolver.py          # Node resolution, path building & ambiguity handling
 │       ├── mega_downloader.py        # Chunked downloader calling route_compression
 │       ├── mega_uploader.py          # Uploader with optional original file retention
 │       └── mega_main.py              # MEGA orchestration

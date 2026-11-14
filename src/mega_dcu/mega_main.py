@@ -11,7 +11,8 @@ from compression_logic.route_compression import route_compress
 from utils import clean_directory, delete_folders_at_end, print_final_statistics, resolve_target_extensions
 
 from mega_dcu.mega_auth import authenticate_mega
-from mega_dcu.mega_downloader import process_mega_folder, resolve_mega_folder
+from mega_dcu.mega_downloader import process_mega_folder
+from mega_dcu.mega_resolver import resolve_mega_folder
 
 
 def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downloads_mega", compressed_dir="compressed_mega"):
