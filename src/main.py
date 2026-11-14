@@ -1,6 +1,11 @@
 import os
 import sys
 
+# Ensure src directory is in sys.path when invoked via console script
+_src_dir = os.path.dirname(os.path.abspath(__file__))
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 # Configure UTF-8 stdout/stderr on Windows to support emojis cleanly
 if sys.platform == "win32":
     try:

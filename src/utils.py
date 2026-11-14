@@ -161,20 +161,31 @@ def print_final_statistics(data_list, upload: bool):
 
 def read_folders_ids(location, provider='drive'):
     """Reads a JSON file containing all the folder IDs for the selected provider."""
-    if not os.path.exists(location) or os.path.getsize(location) == 0:
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    candidates = [
+        location,
+        os.path.join(project_root, location)
+    ]
+    found_path = None
+    for cand in candidates:
+        if os.path.exists(cand) and os.path.getsize(cand) > 0:
+            found_path = cand
+            break
+
+    if not found_path:
         print(f"Folder IDs file '{location}' not found or empty.")
         return None
     
     data = None
-    with open(location, "r", encoding="utf-8") as file:
+    with open(found_path, "r", encoding="utf-8") as file:
         try:
             data = json.load(file)
         except json.JSONDecodeError:
-            print(f"The folder IDs file '{location}' exists but does not contain a valid JSON.")
+            print(f"The folder IDs file '{found_path}' exists but does not contain a valid JSON.")
             return None
 
     if not isinstance(data, dict):
-        print(f"The folder IDs file '{location}' must contain a JSON object.")
+        print(f"The folder IDs file '{found_path}' must contain a JSON object.")
         return None
 
     # Check for provider-specific key: e.g. "drive" or "mega"

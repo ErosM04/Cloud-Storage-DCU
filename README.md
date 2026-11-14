@@ -36,7 +36,10 @@ The upload functionality (if used) will:
 Download this Python project either by clicking on ``Code > Download ZIP`` (then extract the content) or if you have **Git** installed on your terminal run:
 ```shell
 git clone https://github.com/ErosM04/Cloud-Storage-DCU.git
+cd Cloud-Storage-DCU
+py -m pip install -e .
 ```
+*(Running `py -m pip install -e .` installs all Python dependencies and creates the standalone `dcu` command).*
 
 
 ### Python
@@ -120,11 +123,11 @@ You can specify which file types (PDF, PNG, JPG, MP4, etc.) the program should d
 Pass the exact extension names directly in the execution command:
 ```shell
 # Single extension:
-py .\src\main.py drive FolderID -e pdf
+dcu drive FolderID -e pdf
 
 # Multiple extensions (space-separated or comma-separated):
-py .\src\main.py mega FolderName -e pdf png jpg mp4
-py .\src\main.py drive FolderID -e "pdf,png,webp"
+dcu mega FolderName -e pdf png jpg mp4
+dcu drive FolderID -e "pdf,png,webp"
 ```
 
 ### Option 2: Fallback File (`extension.json`)
@@ -152,8 +155,12 @@ If neither the CLI flag nor `extension.json` is specified, the script defaults t
 
 
 ### Command Structure
-Run the script by choosing the provider (`drive` or `mega`):
+Run the script directly using the custom **`dcu`** command (or the classic `py .\src\main.py`):
 ```shell
+dcu drive [folder_id] [options]
+dcu mega [folder_id_or_name] [options]
+
+# Alternative invocation:
 py .\src\main.py drive [folder_id] [options]
 py .\src\main.py mega [folder_id_or_name] [options]
 ```
@@ -213,37 +220,37 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
 #### Google Drive Examples:
 - Download and compress all targeted files in a Drive folder:
     ```shell
-    py .\src\main.py drive 1A2Bv3C4dz5E6F
+    dcu drive 1A2Bv3C4dz5E6F
     ```
 - Compress only images (PNG, JPG) and videos (MP4):
     ```shell
-    py .\src\main.py drive 1A2Bv3C4dz5E6F -e png jpg mp4 -r
+    dcu drive 1A2Bv3C4dz5E6F -e png jpg mp4 -r
     ```
 - Recursive processing with upload and cleanup:
     ```shell
-    py .\src\main.py drive 1A2Bv3C4dz5E6F -c -r -u -d
+    dcu drive 1A2Bv3C4dz5E6F -c -r -u -d
     ```
 
 #### MEGA Examples:
 - Download and compress all targeted files from a MEGA folder:
     ```shell
-    py .\src\main.py mega Invoices -r
+    dcu mega Invoices -r
     ```
 - Target only PDF and WEBP files:
     ```shell
-    py .\src\main.py mega Invoices -e pdf webp -r
+    dcu mega Invoices -e pdf webp -r
     ```
 - Download, compress, and replace original files on MEGA:
     ```shell
-    py .\src\main.py mega Invoices -c -r -u
+    dcu mega Invoices -c -r -u
     ```
 - Download, compress, and upload without deleting original files (appends " cmp" to the compressed file):
     ```shell
-    py .\src\main.py mega Invoices -c -r -u -kb
+    dcu mega Invoices -c -r -u -kb
     ```
 - Process from `folder_ids.json` using 6 threads:
     ```shell
-    py .\src\main.py mega -r -u -t 6
+    dcu mega -r -u -t 6
     ```
 
 

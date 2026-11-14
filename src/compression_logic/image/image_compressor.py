@@ -32,12 +32,11 @@ def compress_image(input_path, output_path, start_spacing, quality=80):
 
             if ext in ['.jpg', '.jpeg'] or save_format == 'JPEG':
                 # Convert palette/transparency to standard RGB for JPEG encoding
-                if img.mode in ('RGBA', 'LA', 'P'):
-                    # Create white background for transparent pixels
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    if img.mode == 'P':
-                        img = img.convert('RGBA')
-                    background.paste(img, mask=img.split()[3])
+                if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+                    # Ensure transparent modes are converted to RGBA so that 4 channels (with alpha at index 3) are always available
+                    rgba_img = img.convert('RGBA')
+                    background = Image.new('RGB', rgba_img.size, (255, 255, 255))
+                    background.paste(rgba_img, mask=rgba_img.split()[3])
                     img = background
                 elif img.mode != 'RGB':
                     img = img.convert('RGB')

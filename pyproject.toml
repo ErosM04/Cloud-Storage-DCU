@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-storage-dcu"
+version = "1.0.0"
+description = "Download, asynchronously compress and re-upload files (PDFs, images, videos) from Google Drive or MEGA cloud storage."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "ErosM04" }
+]
+dependencies = [
+    "Pillow",
+    "google-api-python-client",
+    "google-auth-httplib2",
+    "google-auth-oauthlib",
+    "mega.py",
+    "pycryptodome",
+    "tenacity",
+]
+
+[project.scripts]
+dcu = "main:run"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["main", "flags", "utils", "processed_file_data", "compressor"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
