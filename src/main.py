@@ -31,7 +31,7 @@ def run():
         print(f"No {args.provider.upper()} folder ID provided in terminal. Reading from '{FOLDER_IDS_LOCATION}'...\n")
         folder_ids = read_folders_ids(FOLDER_IDS_LOCATION, provider=args.provider)
         if not folder_ids:
-            return
+            sys.exit(1)
 
     # Resolve target file extensions (from CLI flags, extension.json, or fallback to all supported)
     target_extensions = resolve_target_extensions(args.ext)
@@ -49,7 +49,7 @@ def run():
                 print(f"❌ Error loading Google Drive module: {e}\n")
                 import traceback
                 traceback.print_exc()
-            return
+            sys.exit(1)
         main_drive(
             folder_ids,
             args=args,
@@ -74,7 +74,7 @@ def run():
                 print(f"❌ Error loading MEGA module: {e}\n")
                 import traceback
                 traceback.print_exc()
-            return
+            sys.exit(1)
         main_mega(
             folder_ids,
             args=args,

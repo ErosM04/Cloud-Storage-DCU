@@ -19,7 +19,7 @@ def main_drive(folder_ids_list, args, target_extensions=None, download_dir="down
     """Setup the Google Drive service and cycles all the given folders."""
     if not folder_ids_list:
         print("⚠️ No Google Drive folder IDs provided to process.")
-        return
+        sys.exit(1)
 
     # Clean the directories if the -c flag is used
     if args.clean is not None and args.clean is True:
@@ -35,6 +35,7 @@ def main_drive(folder_ids_list, args, target_extensions=None, download_dir="down
     service = build('drive', 'v3', credentials=creds)
 
     future_list = []
+    failed_folders = []
     
     with ThreadPoolExecutor(max_workers=args.thread_count) as executor:
         params = {
@@ -58,18 +59,28 @@ def main_drive(folder_ids_list, args, target_extensions=None, download_dir="down
                 root_folder_name = folder_metadata.get('name', 'Unknown Folder')
                 print(f"\n\n📁 Target Google Drive Folder: {root_folder_name}")
             except Exception as e:
-                print(f"\n\n⚠️ Could not fetch folder name (check if the ID is correct). Error: {e}")
+                print(f"\n\n❌ Could not fetch folder name for ID '{folder_id}' (check if the ID is correct). Error: {e}")
+                failed_folders.append((folder_id, str(e)))
+                continue
             
             params["folder_id"] = folder_id
             kwargs = {k: v for k, v in params.items() if v is not None}
 
             future_list += process_folder(**kwargs)
         
-        print(f"\n\n⏳ All files downloaded. Waiting for background compressions {'and uploads' if args.upload else ''} to finish...")
-
-    print("\n\n🎉 All operations complete!\n")
+        if len(folder_ids_list) > len(failed_folders):
+            print(f"\n\n⏳ All files downloaded. Waiting for background compressions {'and uploads' if args.upload else ''} to finish...")
 
     if args.delete or args.delete_downloads or args.delete_compressed:
         delete_folders_at_end(future_list, download_dir, compressed_dir, args.delete, args.delete_downloads, args.delete_compressed, args.upload)
 
-    print_final_statistics(future_list, args.upload)
+    if future_list:
+        print_final_statistics(future_list, args.upload)
+
+    if failed_folders:
+        print(f"\n❌ Error: The following {len(failed_folders)} Google Drive folder(s) could not be resolved:")
+        for f_id, err in failed_folders:
+            print(f"   - '{f_id}': {err}")
+        sys.exit(1)
+
+    print("\n\n🎉 All operations complete!\n")

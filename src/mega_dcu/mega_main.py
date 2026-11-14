@@ -18,7 +18,7 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
     """Setup the MEGA client and cycles all the given folders."""
     if not folder_ids_list:
         print("⚠️ No MEGA folder IDs/names provided to process.")
-        return
+        sys.exit(1)
 
     # Clean the directories if the -c flag is used
     if args.clean is not None and args.clean is True:
@@ -36,6 +36,7 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
     all_nodes = mega_client.get_files()
 
     future_list = []
+    failed_folders = []
     
     with ThreadPoolExecutor(max_workers=args.thread_count) as executor:
         for folder_input in folder_ids_list:
@@ -43,7 +44,8 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
                 folder_id, folder_name = resolve_mega_folder(mega_client, folder_input, all_nodes)
                 print(f"\n\n📁 Target MEGA Folder: {folder_name} (Handle: {folder_id})")
             except Exception as e:
-                print(f"\n\n⚠️ Could not resolve MEGA folder '{folder_input}'. Error: {e}")
+                print(f"\n\n❌ Could not resolve MEGA folder '{folder_input}'. Error: {e}")
+                failed_folders.append((folder_input, str(e)))
                 continue
 
             sub_futures = process_mega_folder(
@@ -65,11 +67,19 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
             )
             future_list += sub_futures
 
-        print(f"\n\n⏳ All files downloaded. Waiting for background compressions {'and uploads' if args.upload else ''} to finish...")
-
-    print("\n\n🎉 All operations complete!\n")
+        if len(folder_ids_list) > len(failed_folders):
+            print(f"\n\n⏳ All files downloaded. Waiting for background compressions {'and uploads' if args.upload else ''} to finish...")
 
     if args.delete or args.delete_downloads or args.delete_compressed:
         delete_folders_at_end(future_list, download_dir, compressed_dir, args.delete, args.delete_downloads, args.delete_compressed, args.upload)
 
-    print_final_statistics(future_list, args.upload)
+    if future_list:
+        print_final_statistics(future_list, args.upload)
+
+    if failed_folders:
+        print(f"\n❌ Error: The following {len(failed_folders)} MEGA folder(s) could not be resolved:")
+        for f_in, err in failed_folders:
+            print(f"   - '{f_in}': {err}")
+        sys.exit(1)
+
+    print("\n\n🎉 All operations complete!\n")
