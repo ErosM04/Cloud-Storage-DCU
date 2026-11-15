@@ -1,15 +1,32 @@
+"""
+Data models for tracking file processing results.
+"""
+
+
 class ProcessedFileData:
-    """Holds informations regarding the compression of a file."""
+    """Holds information regarding the compression and upload of a file."""
 
     def __init__(self, 
-                 file_name, 
-                 original_size, 
-                 compressed_size, 
-                 compression_duration, 
-                 start_spacing, 
+                 file_name: str, 
+                 original_size: float, 
+                 compressed_size: float, 
+                 compression_duration: float, 
+                 start_spacing: str, 
                  compression_success: bool,
                  error_message=None):
-        self.file_name = file_name # Instance variable
+        """
+        Initializes processing result metadata for a file.
+
+        Args:
+            file_name (str): The display filename.
+            original_size (float): Pre-compression size in KB.
+            compressed_size (float): Post-compression size in KB.
+            compression_duration (float): Time taken to compress in seconds.
+            start_spacing (str): Terminal indentation prefix.
+            compression_success (bool): Whether compression succeeded.
+            error_message (optional): Error details if compression failed.
+        """
+        self.file_name = file_name
         self.original_size = original_size
         self.compressed_size = compressed_size
         self.compression_duration = compression_duration

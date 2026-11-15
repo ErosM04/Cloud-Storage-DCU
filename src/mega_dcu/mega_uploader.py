@@ -1,3 +1,10 @@
+"""
+MEGA Cloud Storage File Uploader.
+
+Performs thread-safe, parallel chunked uploads to MEGA with support
+for in-place replacement or original file retention (--keep-original).
+"""
+
 import os
 import threading
 
@@ -14,6 +21,7 @@ def ensure_mega_client_threadsafe(mega_client):
         orig_api_request = mega_client._api_request
 
         def threadsafe_api_request(*args, **kwargs):
+            """Thread-safe wrapper for MEGA JSON-RPC API requests."""
             with _mega_api_lock:
                 return orig_api_request(*args, **kwargs)
 

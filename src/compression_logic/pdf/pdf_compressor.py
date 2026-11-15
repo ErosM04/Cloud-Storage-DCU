@@ -1,3 +1,10 @@
+"""
+Ghostscript-based PDF Compressor.
+
+Optimizes PDF file sizes via Ghostscript's pdfwrite device with PATH caching
+and quiet output redirection.
+"""
+
 import os
 import time
 import subprocess
@@ -5,8 +12,6 @@ import shutil
 import threading
 
 from processed_file_data import ProcessedFileData
-
-print_lock = threading.Lock()
 
 _CACHED_GS_CMD = None
 _gs_lock = threading.Lock()

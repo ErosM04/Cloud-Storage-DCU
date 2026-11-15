@@ -1,3 +1,10 @@
+"""
+Pillow-based Image Compressor.
+
+Optimizes JPEG, PNG, WEBP, GIF, TIFF, and BMP images while preserving quality.
+Handles transparency/alpha-channel flattening for JPEG conversions.
+"""
+
 import os
 import time
 import shutil

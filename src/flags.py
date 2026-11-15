@@ -1,3 +1,10 @@
+"""
+CLI Argument Parsing and Flag Definitions.
+
+Configures command-line options for Google Drive and MEGA providers,
+including recursion, extension filtering, threading, and cleanup modes.
+"""
+
 import argparse
 import sys
 

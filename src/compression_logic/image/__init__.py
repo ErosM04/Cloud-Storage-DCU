@@ -1,1 +1,4 @@
-# Image compression package
+"""
+Image compression package using Pillow.
+"""
+

@@ -1,9 +1,15 @@
+"""
+Google Drive Folder Downloader & Traversal.
+
+Recursively navigates Google Drive folder hierarchies, downloads targeted files,
+and orchestrates background compression and re-upload pipelines.
+"""
+
 import os
 import io
-import re
 from googleapiclient.http import MediaIoBaseDownload
 
-from utils import format_duration, sanitize_name, print_compression_result, print_upload_result, print_lock
+from utils import sanitize_name, print_compression_result, print_upload_result
 from compression_logic.route_compression import is_file_eligible, route_compress
 
 from drive_dcu.drive_uploader import replace_file_on_drive

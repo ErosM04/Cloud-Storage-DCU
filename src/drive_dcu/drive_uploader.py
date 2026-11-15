@@ -1,3 +1,10 @@
+"""
+Google Drive In-Place File Updater.
+
+Updates existing file contents while preserving their original Google Drive File ID.
+Uses thread-local cached Drive service instances for concurrency.
+"""
+
 import mimetypes
 import threading
 from googleapiclient.discovery import build

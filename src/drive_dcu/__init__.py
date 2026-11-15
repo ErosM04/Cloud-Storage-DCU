@@ -1,1 +1,4 @@
-# Drive package
+"""
+Google Drive integration package.
+"""
+

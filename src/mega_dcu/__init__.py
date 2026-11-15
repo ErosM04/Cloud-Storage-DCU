@@ -1,3 +1,7 @@
+"""
+MEGA Cloud Storage integration package.
+"""
+
 import asyncio
 import types
 

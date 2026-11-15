@@ -1,15 +1,20 @@
+"""
+MEGA Cloud Storage File Downloader & Folder Processor.
+
+Implements real-time chunked AES CTR/CBC decryption, MAC integrity verification,
+and recursive folder traversal for MEGA cloud files.
+"""
+
 import os
 import requests
 import asyncio
 import types
-from pathlib import Path
 
 # Compatibility shim for Python 3.11+ with tenacity < 6.0 (required by mega.py)
 if not hasattr(asyncio, 'coroutine'):
     asyncio.coroutine = types.coroutine
 
 from mega.mega import (
-    base64_to_a32,
     a32_to_str,
     Counter,
     AES,
@@ -18,16 +23,13 @@ from mega.mega import (
     RequestError,
 )
 
-from utils import format_duration, sanitize_name, print_compression_result, print_upload_result
+from utils import sanitize_name, print_compression_result, print_upload_result
 from compression_logic.route_compression import is_file_eligible, route_compress
 
 from mega_dcu.mega_uploader import upload_file_to_mega
 from mega_dcu.mega_resolver import (
     get_node_name,
-    get_node_path,
-    is_node_trashed,
     build_children_index,
-    resolve_mega_folder,
 )
 
 BASE_SPACING = "   "  # Space increase between subfolders' prints

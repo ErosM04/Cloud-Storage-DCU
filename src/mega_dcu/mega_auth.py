@@ -1,3 +1,10 @@
+"""
+MEGA Cloud Storage Authentication & Session Caching.
+
+Handles terminal login, session persistence in .mega_session.json,
+and intercepts rate-limiting/Proof-of-Work API challenges with actionable diagnostics.
+"""
+
 import getpass
 import json
 import os

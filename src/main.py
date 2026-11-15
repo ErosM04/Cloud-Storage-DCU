@@ -1,3 +1,10 @@
+"""
+Cloud-Storage-DCU Main Entrypoint.
+
+Dispatches download, compression, and re-upload workflows
+to the selected provider (Google Drive or MEGA).
+"""
+
 import os
 import sys
 

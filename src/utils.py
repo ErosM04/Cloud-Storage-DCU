@@ -1,3 +1,10 @@
+"""
+General Helper Utilities.
+
+Provides directory cleaning, time formatting, Windows filename sanitization,
+thread-safe console printing, statistics aggregation, and extension resolution.
+"""
+
 import shutil
 import os
 import re

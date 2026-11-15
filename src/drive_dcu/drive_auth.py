@@ -1,3 +1,9 @@
+"""
+Google Drive OAuth2 Authentication.
+
+Handles credentials location, browser authorization flow, and token persistence.
+"""
+
 import os
 import sys
 from google.oauth2.credentials import Credentials

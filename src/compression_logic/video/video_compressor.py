@@ -1,3 +1,10 @@
+"""
+FFmpeg-based Video Compressor.
+
+Detects and utilizes hardware GPU encoders (NVIDIA NVENC, Intel QSV, AMD AMF, MediaFoundation)
+with automatic fallback to CPU libx264 encoding.
+"""
+
 import os
 import time
 import shutil

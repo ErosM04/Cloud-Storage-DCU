@@ -1,3 +1,10 @@
+"""
+Compression Router.
+
+Inspects file extensions and delegates to PDF (Ghostscript),
+image (Pillow), or video (FFmpeg) compressors in O(1) lookup time.
+"""
+
 import os
 import sys
 

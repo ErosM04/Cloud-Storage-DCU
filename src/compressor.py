@@ -1,3 +1,9 @@
+"""
+Backward-compatibility facade for compression functions.
+
+Re-exports core compression utilities for legacy scripts and entry points.
+"""
+
 from utils import print_lock
 from compression_logic.pdf.pdf_compressor import compress_pdf as compress_pdf_ghostscript
 from compression_logic.route_compression import route_compress

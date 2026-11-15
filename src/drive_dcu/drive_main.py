@@ -1,3 +1,9 @@
+"""
+Google Drive Orchestration Module.
+
+Sets up authentication, cleans directories, and coordinates folder processing pipelines.
+"""
+
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor

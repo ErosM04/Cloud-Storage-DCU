@@ -1,1 +1,4 @@
-# PDF compression package
+"""
+PDF compression package using Ghostscript.
+"""
+

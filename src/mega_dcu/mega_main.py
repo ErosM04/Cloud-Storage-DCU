@@ -1,3 +1,9 @@
+"""
+MEGA Cloud Storage Orchestration Module.
+
+Coordinates authentication, directory cleanup, and folder processing pipelines.
+"""
+
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
