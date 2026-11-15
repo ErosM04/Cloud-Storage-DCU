@@ -35,6 +35,20 @@ from mega_dcu.mega_resolver import (
 BASE_SPACING = "   "  # Space increase between subfolders' prints
 
 
+def _read_exact(stream, size):
+    """
+    Reads exactly `size` bytes from the network stream, or until EOF.
+    Guarantees complete chunk buffers against partial TCP reads.
+    """
+    buf = bytearray()
+    while len(buf) < size:
+        part = stream.read(size - len(buf))
+        if not part:
+            break
+        buf.extend(part)
+    return bytes(buf)
+
+
 def download_mega_pdf(mega_client, file_node, dest_dir, file_name, start_spacing=""):
     """
     Downloads and decrypts a file from MEGA directly to dest_dir/file_name,
@@ -67,25 +81,21 @@ def download_mega_pdf(mega_client, file_node, dest_dir, file_name, start_spacing
     with open(file_path, 'wb') as out_f:
         if file_size > 0:
             for chunk_start, chunk_size in get_chunks(file_size):
-                chunk = input_stream.read(chunk_size)
+                chunk = _read_exact(input_stream, chunk_size)
                 chunk = aes.decrypt(chunk)
                 out_f.write(chunk)
                 download_progress += len(chunk)
 
+                # Vectorized bulk CBC MAC calculation (C-accelerated AES)
                 encryptor = AES.new(k_str, AES.MODE_CBC, iv_str)
-                for i in range(0, len(chunk) - 16, 16):
-                    block = chunk[i:i + 16]
-                    encryptor.encrypt(block)
-
-                if file_size > 16:
-                    i += 16
-                else:
-                    i = 0
-
-                block = chunk[i:i + 16]
-                if len(block) % 16:
-                    block += b'\0' * (16 - (len(block) % 16))
-                mac_str = mac_encryptor.encrypt(encryptor.encrypt(block))
+                last_block_start = max(0, ((len(chunk) - 1) // 16) * 16)
+                prefix = chunk[:last_block_start]
+                if prefix:
+                    encryptor.encrypt(prefix)
+                last_block = chunk[last_block_start:]
+                if len(last_block) % 16:
+                    last_block += b'\0' * (16 - (len(last_block) % 16))
+                mac_str = mac_encryptor.encrypt(encryptor.encrypt(last_block))
 
                 percent = int(download_progress / file_size * 100)
                 print(f"{start_spacing}  ▶️ Download {percent}%.", end='\r', flush=True)

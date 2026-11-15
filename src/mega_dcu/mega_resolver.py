@@ -73,23 +73,45 @@ def get_node_path(handle, all_nodes):
     return " / ".join(reversed(parts)) if parts else handle
 
 
-def is_node_trashed(handle, all_nodes, trash_id=None):
-    """Checks if a node is located inside the Rubbish/Trash bin."""
+def is_node_trashed(handle, all_nodes, trash_id=None, cache=None):
+    """
+    Checks if a node is located inside the Rubbish/Trash bin.
+    Uses an optional cache dict for amortized O(1) ancestor lookups.
+    """
+    if cache is not None and handle in cache:
+        return cache[handle]
+
     current_handle = handle
-    visited = set()
+    visited = []
+    visited_set = set()
+    is_trashed = False
+
     while current_handle and current_handle in all_nodes:
-        if current_handle in visited:
+        if current_handle in visited_set:
             break
-        visited.add(current_handle)
+        visited.append(current_handle)
+        visited_set.add(current_handle)
+
+        if cache is not None and current_handle in cache:
+            is_trashed = cache[current_handle]
+            break
+
         if trash_id and current_handle == trash_id:
-            return True
+            is_trashed = True
+            break
         node = all_nodes[current_handle]
         if not isinstance(node, dict):
             break
         if node.get('t') == 4:  # Trash bin node type
-            return True
+            is_trashed = True
+            break
         current_handle = node.get('p')
-    return False
+
+    if cache is not None:
+        for visited_handle in visited:
+            cache[visited_handle] = is_trashed
+
+    return is_trashed
 
 
 def build_children_index(all_nodes):
@@ -142,14 +164,15 @@ def resolve_mega_folder(mega_client, folder_input, all_nodes=None):
 
     # 2. Match by folder name (case-insensitive) across active (non-trashed) folders
     trash_id = getattr(mega_client, 'trashbin_id', None)
+    trashed_cache = {}
     matches = []
     for handle, node in all_nodes.items():
         if isinstance(node, dict) and node.get('t') in (1, 2):  # Folder or root node
-            if is_node_trashed(handle, all_nodes, trash_id):
-                continue
             name = get_node_name(node, default='')
             if name and name.strip().lower() == folder_str.lower():
-                matches.append((handle, name))
+                # Check trash status only for nodes that match the target name
+                if not is_node_trashed(handle, all_nodes, trash_id, cache=trashed_cache):
+                    matches.append((handle, name))
 
     if len(matches) == 1:
         return matches[0][0], matches[0][1]

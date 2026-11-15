@@ -18,7 +18,7 @@ from utils import clean_directory, delete_folders_at_end, print_final_statistics
 
 from mega_dcu.mega_auth import authenticate_mega
 from mega_dcu.mega_downloader import process_mega_folder
-from mega_dcu.mega_resolver import resolve_mega_folder
+from mega_dcu.mega_resolver import resolve_mega_folder, build_children_index
 
 
 def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downloads_mega", compressed_dir="compressed_mega"):
@@ -41,6 +41,7 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
 
     print("⏳ Fetching MEGA cloud file structure...")
     all_nodes = mega_client.get_files()
+    children_by_parent = build_children_index(all_nodes)
 
     future_list = []
     failed_folders = []
@@ -63,6 +64,7 @@ def main_mega(folder_ids_list, args, target_extensions=None, download_dir="downl
                 current_download_dir=download_dir,
                 current_compressed_dir=compressed_dir,
                 all_nodes=all_nodes,
+                children_by_parent=children_by_parent,
                 target_extensions=target_extensions,
                 recursive=args.recursive,
                 recursive_depth=args.rd,
