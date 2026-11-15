@@ -97,9 +97,11 @@ def build_children_index(all_nodes):
     index = {}
     if not isinstance(all_nodes, dict):
         return index
-    for node in all_nodes.values():
+    for handle, node in all_nodes.items():
         if not isinstance(node, dict):
             continue
+        if 'h' not in node and handle:
+            node['h'] = handle
         parent = node.get('p')
         if parent not in index:
             index[parent] = []
