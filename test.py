@@ -178,15 +178,17 @@ def extract_mega_subfolders(parent_input, mega_client=None):
 def get_drive_tests(subfolders=None):
     """
     Builds the list of test definitions for Google Drive mapped to extracted subfolders.
-    The 1st subfolder is mapped to Test 1, 2nd to Test 2, etc.
+    The 1st subfolder is mapped to Test 1, 2nd to Test 2, etc. (up to 14 tests).
     """
     if subfolders is None:
         subfolders = []
 
     def sf_id(idx):
+        """Safely retrieves subfolder ID at index or empty string."""
         return subfolders[idx]['id'] if idx < len(subfolders) else ""
 
     def sf_name(idx):
+        """Safely retrieves subfolder display name at index or empty string."""
         return subfolders[idx]['name'] if idx < len(subfolders) else ""
 
     return [
@@ -201,49 +203,105 @@ def get_drive_tests(subfolders=None):
         {
             "id": 2,
             "provider": "drive",
-            "name": "Extension filtering (-e pdf png)",
+            "name": "Single extension filtering (-e pdf)",
             "folder": sf_id(1),
             "folder_name": sf_name(1),
-            "args": ["-e", "pdf", "png", "-c"],
+            "args": ["-e", "pdf", "-c"],
         },
         {
             "id": 3,
             "provider": "drive",
-            "name": "Recursive depth limit (-r --rd 2)",
+            "name": "Image extensions filtering (-e png jpg webp)",
             "folder": sf_id(2),
             "folder_name": sf_name(2),
-            "args": ["-r", "--rd", "2", "-c"],
+            "args": ["-e", "png", "jpg", "jpeg", "webp", "-c"],
         },
         {
             "id": 4,
             "provider": "drive",
-            "name": "Files-first traversal (-r --pf)",
+            "name": "Video extensions filtering (-e mp4 mkv mov)",
             "folder": sf_id(3),
             "folder_name": sf_name(3),
-            "args": ["-r", "--pf", "-c"],
+            "args": ["-e", "mp4", "mkv", "mov", "-c"],
         },
         {
             "id": 5,
             "provider": "drive",
-            "name": "File limit & thread count (-t 2 -n 5)",
+            "name": "Full recursive traversal (-r)",
             "folder": sf_id(4),
             "folder_name": sf_name(4),
-            "args": ["-t", "2", "-n", "5", "-c"],
+            "args": ["-r", "-c"],
         },
         {
             "id": 6,
             "provider": "drive",
-            "name": "Compression with re-upload (-u)",
+            "name": "Recursive depth limit 1 (-r --rd 1)",
             "folder": sf_id(5),
             "folder_name": sf_name(5),
-            "args": ["-u", "-c"],
+            "args": ["-r", "--rd", "1", "-c"],
         },
         {
             "id": 7,
             "provider": "drive",
-            "name": "Full pipeline with local cleanup (-u -d)",
+            "name": "Files-first traversal (-r --pf)",
             "folder": sf_id(6),
             "folder_name": sf_name(6),
+            "args": ["-r", "--pf", "-c"],
+        },
+        {
+            "id": 8,
+            "provider": "drive",
+            "name": "Single-thread processing (-t 1)",
+            "folder": sf_id(7),
+            "folder_name": sf_name(7),
+            "args": ["-t", "1", "-c"],
+        },
+        {
+            "id": 9,
+            "provider": "drive",
+            "name": "Multi-threading with file limit (-t 4 -n 3)",
+            "folder": sf_id(8),
+            "folder_name": sf_name(8),
+            "args": ["-t", "4", "-n", "3", "-c"],
+        },
+        {
+            "id": 10,
+            "provider": "drive",
+            "name": "Delete downloads only (-dd)",
+            "folder": sf_id(9),
+            "folder_name": sf_name(9),
+            "args": ["-dd", "-c"],
+        },
+        {
+            "id": 11,
+            "provider": "drive",
+            "name": "Compression with re-upload (-u)",
+            "folder": sf_id(10),
+            "folder_name": sf_name(10),
+            "args": ["-u", "-c"],
+        },
+        {
+            "id": 12,
+            "provider": "drive",
+            "name": "Re-upload and delete compressed only (-u -dc)",
+            "folder": sf_id(11),
+            "folder_name": sf_name(11),
+            "args": ["-u", "-dc", "-c"],
+        },
+        {
+            "id": 13,
+            "provider": "drive",
+            "name": "Recursive re-upload with depth & files-first (-u -r --rd 1 --pf)",
+            "folder": sf_id(12),
+            "folder_name": sf_name(12),
+            "args": ["-u", "-r", "--rd", "1", "--pf", "-c"],
+        },
+        {
+            "id": 14,
+            "provider": "drive",
+            "name": "Full pipeline with local cleanup (-u -d)",
+            "folder": sf_id(13),
+            "folder_name": sf_name(13),
             "args": ["-u", "-d", "-c"],
         },
     ]
@@ -252,15 +310,17 @@ def get_drive_tests(subfolders=None):
 def get_mega_tests(subfolders=None):
     """
     Builds the list of test definitions for MEGA mapped to extracted subfolders.
-    The 1st subfolder is mapped to Test 1, 2nd to Test 2, etc.
+    The 1st subfolder is mapped to Test 1, 2nd to Test 2, etc. (up to 14 tests).
     """
     if subfolders is None:
         subfolders = []
 
     def sf_id(idx):
+        """Safely retrieves subfolder ID at index or empty string."""
         return subfolders[idx]['id'] if idx < len(subfolders) else ""
 
     def sf_name(idx):
+        """Safely retrieves subfolder display name at index or empty string."""
         return subfolders[idx]['name'] if idx < len(subfolders) else ""
 
     return [
@@ -275,50 +335,106 @@ def get_mega_tests(subfolders=None):
         {
             "id": 2,
             "provider": "mega",
-            "name": "Extension filtering (-e pdf png)",
+            "name": "Single extension filtering (-e pdf)",
             "folder": sf_id(1),
             "folder_name": sf_name(1),
-            "args": ["-e", "pdf", "png", "-c"],
+            "args": ["-e", "pdf", "-c"],
         },
         {
             "id": 3,
             "provider": "mega",
-            "name": "Recursive depth limit (-r --rd 2)",
+            "name": "Image extensions filtering (-e png jpg webp)",
             "folder": sf_id(2),
             "folder_name": sf_name(2),
-            "args": ["-r", "--rd", "2", "-c"],
+            "args": ["-e", "png", "jpg", "jpeg", "webp", "-c"],
         },
         {
             "id": 4,
             "provider": "mega",
-            "name": "Files-first traversal (-r --pf)",
+            "name": "Video extensions filtering (-e mp4 mkv mov)",
             "folder": sf_id(3),
             "folder_name": sf_name(3),
-            "args": ["-r", "--pf", "-c"],
+            "args": ["-e", "mp4", "mkv", "mov", "-c"],
         },
         {
             "id": 5,
             "provider": "mega",
-            "name": "File limit & thread count (-t 2 -n 5)",
+            "name": "Full recursive traversal (-r)",
             "folder": sf_id(4),
             "folder_name": sf_name(4),
-            "args": ["-t", "2", "-n", "5", "-c"],
+            "args": ["-r", "-c"],
         },
         {
             "id": 6,
             "provider": "mega",
-            "name": "Compression & re-upload replace mode (-u)",
+            "name": "Recursive depth limit 1 (-r --rd 1)",
             "folder": sf_id(5),
             "folder_name": sf_name(5),
-            "args": ["-u", "-c"],
+            "args": ["-r", "--rd", "1", "-c"],
         },
         {
             "id": 7,
             "provider": "mega",
-            "name": "Upload keep-original (-u -kb --cmp-suffix ' cmp')",
+            "name": "Files-first traversal (-r --pf)",
             "folder": sf_id(6),
             "folder_name": sf_name(6),
-            "args": ["-u", "-kb", "--cmp-suffix", " cmp", "-c"],
+            "args": ["-r", "--pf", "-c"],
+        },
+        {
+            "id": 8,
+            "provider": "mega",
+            "name": "Single-thread processing (-t 1)",
+            "folder": sf_id(7),
+            "folder_name": sf_name(7),
+            "args": ["-t", "1", "-c"],
+        },
+        {
+            "id": 9,
+            "provider": "mega",
+            "name": "Multi-threading with file limit (-t 4 -n 3)",
+            "folder": sf_id(8),
+            "folder_name": sf_name(8),
+            "args": ["-t", "4", "-n", "3", "-c"],
+        },
+        {
+            "id": 10,
+            "provider": "mega",
+            "name": "Delete downloads only (-dd)",
+            "folder": sf_id(9),
+            "folder_name": sf_name(9),
+            "args": ["-dd", "-c"],
+        },
+        {
+            "id": 11,
+            "provider": "mega",
+            "name": "Compression & re-upload replace mode (-u)",
+            "folder": sf_id(10),
+            "folder_name": sf_name(10),
+            "args": ["-u", "-c"],
+        },
+        {
+            "id": 12,
+            "provider": "mega",
+            "name": "Upload keep-original default suffix (-u -kb)",
+            "folder": sf_id(11),
+            "folder_name": sf_name(11),
+            "args": ["-u", "-kb", "-c"],
+        },
+        {
+            "id": 13,
+            "provider": "mega",
+            "name": "Upload keep-original custom suffix (-u -kb --cmp-suffix '_min')",
+            "folder": sf_id(12),
+            "folder_name": sf_name(12),
+            "args": ["-u", "-kb", "--cmp-suffix", "_min", "-c"],
+        },
+        {
+            "id": 14,
+            "provider": "mega",
+            "name": "Full pipeline with local cleanup (-u -d)",
+            "folder": sf_id(13),
+            "folder_name": sf_name(13),
+            "args": ["-u", "-d", "-c"],
         },
     ]
 
@@ -414,9 +530,9 @@ def run_test(test, dcu_cmd=None):
 
 def print_summary(results):
     """Prints a structured summary of all test executions."""
-    print(f"\n\n{'=' * 80}")
+    print(f"\n\n{'=' * 95}")
     print("📋 TEST EXECUTION SUMMARY REPORT")
-    print(f"{'=' * 80}")
+    print(f"{'=' * 95}")
 
     total = len(results)
     passed = sum(1 for r in results if r["status"] == "PASSED")
@@ -424,20 +540,20 @@ def print_summary(results):
     skipped = sum(1 for r in results if r["status"] == "SKIPPED")
     total_time = sum(r["duration"] for r in results)
 
-    print(f"{'#':<4} {'Provider':<10} {'Scenario':<42} {'Status':<10} {'Duration':<10}")
-    print(f"{'-' * 80}")
+    print(f"{'#':<4} {'Provider':<10} {'Scenario':<55} {'Status':<10} {'Duration':<10}")
+    print(f"{'-' * 95}")
 
     for r in results:
         t = r["test"]
         status_icon = "✅" if r["status"] == "PASSED" else ("❌" if r["status"] in ["FAILED", "ERROR"] else "⚠️")
         status_text = f"{status_icon} {r['status']}"
         dur_text = format_duration(r["duration"]) if r["duration"] > 0 else "-"
-        print(f"{t['id']:<4} {t['provider'].upper():<10} {t['name'][:40]:<42} {status_text:<10} {dur_text:<10}")
+        print(f"{t['id']:<4} {t['provider'].upper():<10} {t['name'][:53]:<55} {status_text:<10} {dur_text:<10}")
 
-    print(f"{'-' * 80}")
+    print(f"{'-' * 95}")
     print(f"Totals: {total} tests | {passed} passed | {failed} failed | {skipped} skipped")
     print(f"Total time elapsed: {format_duration(total_time)}")
-    print(f"{'=' * 80}\n")
+    print(f"{'=' * 95}\n")
 
 
 def print_usage():
