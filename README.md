@@ -10,13 +10,12 @@ The upload functionality (if used) will:
 
 
 ## Index
-1. [Setup](#setup)
+1. [Software Setup](#software-setup)
     - 1.1 [**Cloud-Storage-DCU**](#cloud-storage-dcu-1)
     - 1.2 [Python](#python)
-    - 1.3 [Ghostscript (PDF Compression)](#ghostscript-pdf-compression)
-    - 1.4 [Pillow & FFmpeg (Image & Video Compression)](#pillow--ffmpeg-image--video-compression)
-    - 1.5 [Google Drive Setup (Optional)](#google-drive-setup-optional)
-    - 1.6 [MEGA Setup (Optional)](#mega-setup-optional)
+    - 1.3 [Ghostscript, Pillow & FFmpeg for compression](#ghostscript-pillow--ffmpeg-for-compression)
+    - 1.4 [Google Drive Setup (Optional)](#google-drive-setup-optional)
+    - 1.5 [MEGA Setup (Optional)](#mega-setup-optional)
 2. [File Extensions Configuration](#file-extensions-configuration)
     - 2.1 [Option 1: Command-Line Flag (`-e` / `--ext`)](#option-1-command-line-flag--e----ext)
     - 2.2 [Option 2: Fallback File (`extension.json`)](#option-2-fallback-file-extensionjson)
@@ -25,11 +24,12 @@ The upload functionality (if used) will:
     - 3.2 [Provide the Folders IDs / Handles](#provide-the-folders-ids--handles)
     - 3.3 [Parameters & Options](#parameters--options)
     - 3.4 [Examples](#examples)
-4. [Project Architecture](#project-architecture)
-5. [Common Errors](#common-errors)
+4. [Common Errors](#common-errors)
+5. [Project Architecture](#project-architecture)
+6. [MCP Server](#mcp-server)
 
 
-## Setup
+## Software Setup
 
 
 ### Cloud-Storage-DCU
@@ -43,7 +43,7 @@ py -m pip install -e .
 
 
 ### Python
-Install Python from the [website](https://www.python.org/downloads/) :snake: or by using your local package manager.
+Install Python from the [website :snake:](https://www.python.org/downloads/) or by using your local package manager.
 Then open the terminal and run the following command:
 ```shell
 python --version
@@ -55,35 +55,38 @@ C:\Users\{username}\AppData\Local\Programs\Python\Python{version}\Scripts\
 C:\Users\{username}\AppData\Local\Programs\Python\Python{version}\
 C:\Users\{username}\AppData\Local\Programs\Python\Launcher\
 ```
-Then save and reopen the terminal to verify that the command works.
+Then save and reopen the terminal to verify the command works.
 
 
-### Ghostscript (PDF Compression)
-Install the compression tool [Ghostscript AGPL](https://ghostscript.com/releases/gsdnld.html) and then go to ``Modify System Environment Variables > Environment Variables > PATH`` and add the following line:
-```
-C:\Program Files\gs\gs{version}\bin
-```
-Note that this path may vary if you changed it during the Ghostscript installation.
+### Ghostscript, Pillow & FFmpeg for compression
+Install the compression tools for different types of files:
 
-Then close and reopen the terminal and run the following command:
-```shell
-gswin64c --version
-```
-If you get prompted with the Ghostscript version it is installed and properly working for our use case.
+1. PDF: Install [Ghostscript AGPL](https://ghostscript.com/releases/gsdnld.html) and then go to ``Modify System Environment Variables > Environment Variables > PATH`` and add the following line:
+    ```
+    C:\Program Files\gs\gs{version}\bin
+    ```
+    Note that this path may vary if you changed it during the Ghostscript installation.
 
+    Then close and reopen the terminal and run the following command:
+    ```shell
+    gswin64c --version
+    ```
+    If you get prompted with the installed Ghostscript version it means it's properly setup.
 
-### Pillow & FFmpeg (Image & Video Compression)
-To compress images and videos:
-1. **Pillow** (Images: JPEG, PNG, WEBP, GIF, TIFF, BMP, etc.):
+2. Image: Install **Pillow** (Images: JPEG, PNG, WEBP, GIF, TIFF, BMP, etc.) by running:
    ```shell
    py -m pip install Pillow
    ```
    *(Optional for HEIC/AVIF: `py -m pip install pillow-heif`)*
-2. **FFmpeg** (Videos: MP4, MKV, MOV, AVI, WEBM, etc. with GPU acceleration):
+3. Video: **FFmpeg** (Videos: MP4, MKV, MOV, AVI, WEBM, etc. with GPU acceleration):
    Ensure `ffmpeg` is installed and available in your `PATH`.
    Check it with:
    ```shell
    ffmpeg -version
+   ```
+   Otherwise run:
+   ```shell
+   winget install Gyan.FFmpeg
    ```
    The video compressor automatically detects hardware GPU encoders (`h264_nvenc` for NVIDIA, `h264_qsv` for Intel Quick Sync, `h264_amf` for AMD, `h264_mf` for MediaFoundation) and seamlessly falls back to CPU `libx264` if no GPU encoder is supported.
 
@@ -104,7 +107,7 @@ Then:
 2. From the project's panel go to ``APIs & Services > Library``, search for **"Google Drive API"**, select it and click **Enable**.
 3. Go to ``APIs & Services > Credentials`` and configure the **consent screen** if asked.
 4. Create **OAuth client ID** credentials (choose **"Desktop app"**).
-5. Download the JSON file, rename it to ``credentials.json`` and place it in the root folder of this project (not in ``/src``!!).
+5. Download the JSON file, rename it to ``credentials.json`` and place it in the root folder of this project.
 6. In the project's panel go to ``Google Auth Platoform > Public`` and add your email to the **Test users**.
 
 
@@ -113,7 +116,8 @@ If you plan to use MEGA:
 ```shell
 py -m pip install mega.py pycryptodome tenacity
 ```
-*No API console setup is required for MEGA!* When running the script with `mega`, it will prompt for your MEGA account email and password directly in the terminal (with hidden password input). You can also optionally set `MEGA_EMAIL` and `MEGA_PASSWORD` environment variables.
+*No API console setup is required for MEGA!* When running the script with `mega`, it will prompt for your MEGA account email and password directly in the terminal (with hidden password input). The session will be saved in a JSON file.
+You can also optionally set `MEGA_EMAIL` and `MEGA_PASSWORD` environment variables.
 
 
 ## File Extensions Configuration
@@ -131,7 +135,7 @@ dcu drive FolderID -e "pdf,png,webp"
 ```
 
 ### Option 2: Fallback File (`extension.json`)
-If no `-e` / `--ext` parameter is passed in the command line, the program automatically falls back to reading `extension.json` located in the project root:
+If no `-e` / `--ext` parameter is passed in the command line, the program automatically falls back to reading `extension.json` located in the project root. This is the default content of the file:
 ```json
 {
   "extensions": [
@@ -146,9 +150,9 @@ If no `-e` / `--ext` parameter is passed in the command line, the program automa
   ]
 }
 ```
-*(Or simply a JSON array: `["pdf", "png", "mp4"]`).*
+*(Or simply write a JSON array: `["pdf", "png", "mp4"]`).*
 
-If neither the CLI flag nor `extension.json` is specified, the script defaults to operating on all supported extensions.
+If neither the CLI flag nor `extension.json` is specified, the script defaults to operating on **all** supported extensions.
 
 
 ## How To Use
@@ -175,7 +179,7 @@ Open your Google Drive folder on your browser and copy the ID at the end of the 
 #### For MEGA:
 You can provide any of the following:
 1. **Folder Node Handle**: 8-character string ID (e.g. `k0k3TBwD`).
-2. **Folder Name**: Name of the folder in your MEGA account (e.g. `Invoices` or `MyFolder`).
+2. **Folder Name**: Name of the folder in your MEGA account (e.g. `Invoices` or `MyFolder`). In case of duplicates only the first one in the tree is processed.
 3. **Root**: Use `root` to target your entire MEGA Cloud Drive.
 
 #### Passing multiple IDs via `folder_ids.json`:
@@ -254,36 +258,52 @@ If you omit the folder ID from the command, the script reads from `folder_ids.js
     ```
 
 
+## Common Errors
+- **Request related error (Google Drive)**: Delete `token.json` and publish your OAuth app to Production mode in Google Cloud Console.
+- **Account access to project denied (Google Cloud Console)**: Go to the Google Cloude Console and open the preject you created, then in the project's panel go to ``Google Auth Platoform > Public`` and add your email to the **Test users**.
+- **Google Drive API not enabled**: Enable the Google Drive API in Google Cloud Console.
+- **Ghostscript command not found**: Ensure `gswin64c` is in PATH. If on Linux/macOS or your binary is named `gs`, change `ghostscript_cmd = "gswin64c"` to `"gs"` in `src/compressor.py`.
+- **MEGA Login/Download Failed**: Ensure your MEGA email and password are correct, or that your account wasn't blocked due to a high amount of requests.
+
+
 ## Project Architecture
 The project is structured with modularity as a primary goal:
 ```
 Cloud-Storage-DCU/
 ├── extension.json                    # Default target file extensions (fallback)
 ├── folder_ids.json                   # Cloud folder IDs configuration
-├── src/
-│   ├── main.py                       # CLI entry point and provider dispatcher
-│   ├── flags.py                      # Argument parser (-e, -c, -r, -u, etc.)
-│   ├── utils.py                      # Extension resolver, statistics, cleanup
-│   ├── processed_file_data.py        # Standardized file compression result class
-│   ├── compression_logic/            # Modular compression engine
-│   │   ├── route_compression.py      # Central extension-based router
-│   │   ├── pdf/
-│   │   │   └── pdf_compressor.py     # Ghostscript PDF compression
-│   │   ├── image/
-│   │   │   └── image_compressor.py   # Pillow image compression (JPEG, PNG, WEBP, etc.)
-│   │   └── video/
-│   │       └── video_compressor.py   # FFmpeg video compression with GPU acceleration
-│   ├── drive_dcu/                    # Google Drive module
-│   │   ├── drive_auth.py             # OAuth2 authentication
-│   │   ├── drive_downloader.py       # Async downloader calling route_compression
-│   │   ├── drive_uploader.py         # In-place file updater with dynamic MIME detection
-│   │   └── drive_main.py             # Google Drive orchestration
-│   └── mega_dcu/                     # MEGA cloud module
-│       ├── mega_auth.py              # MEGA authentication prompt
-│       ├── mega_resolver.py          # Node resolution, path building & ambiguity handling
-│       ├── mega_downloader.py        # Chunked downloader calling route_compression
-│       ├── mega_uploader.py          # Uploader with optional original file retention
-│       └── mega_main.py              # MEGA orchestration
+├── test.py                           # Suite of tests
+├── pyproject.toml                    # Python configuration to create an executable 
+└── src/
+    ├── main.py                       # CLI entry point and provider dispatcher
+    ├── flags.py                      # Argument parser (-e, -c, -r, -u, etc.)
+    ├── utils.py                      # Extension resolver, statistics, cleanup
+    ├── processed_file_data.py        # Standardized file compression result class
+    │
+    ├── compression_logic/            # Modular compression engine
+    │   ├── route_compression.py      # Central extension-based router
+    │   ├── pdf/
+    │   │   └── pdf_compressor.py     # Ghostscript PDF compression
+    │   ├── image/
+    │   │   └── image_compressor.py   # Pillow image compression (JPEG, PNG, WEBP, etc.)
+    │   └── video/
+    │       └── video_compressor.py   # FFmpeg video compression with GPU acceleration
+    │
+    ├── drive_dcu/                    # Google Drive module
+    │   ├── drive_auth.py             # OAuth2 authentication
+    │   ├── drive_downloader.py       # Async downloader calling route_compression
+    │   ├── drive_uploader.py         # In-place file updater with dynamic MIME detection
+    │   └── drive_main.py             # Google Drive orchestration
+    │
+    ├── mega_dcu/                     # MEGA cloud module
+    │    ├── mega_auth.py             # MEGA authentication prompt
+    │    ├── mega_resolver.py         # Node resolution, path building & ambiguity handling
+    │    ├── mega_downloader.py       # Chunked downloader calling route_compression
+    │    ├── mega_uploader.py         # Uploader with optional original file retention
+    │    └── mega_main.py             # MEGA orchestration
+    │
+    └── mcp_server/                   # MCP server module
+        └── server.py                 # MCP logic for a smooth Agent integration
 ```
 
 ### Compression Routing Workflow
@@ -296,9 +316,5 @@ Cloud-Storage-DCU/
 4. The compressor returns a unified `ProcessedFileData` object containing the duration, original size, compressed size, and compression success status.
 
 
-## Common Errors
-- **Request related error (Google Drive)**: Delete `token.json` and publish your OAuth app to Production mode in Google Cloud Console.
-- **Account access to project denied (Google Cloud Console)**: Go to the Google Cloude Console and open the preject you created, then in the project's panel go to ``Google Auth Platoform > Public`` and add your email to the **Test users**.
-- **Google Drive API not enabled**: Enable the Google Drive API in Google Cloud Console.
-- **Ghostscript command not found**: Ensure `gswin64c` is in PATH. If on Linux/macOS or your binary is named `gs`, change `ghostscript_cmd = "gswin64c"` to `"gs"` in `src/compressor.py`.
-- **MEGA Login Failed**: Ensure your MEGA email and password are correct.
+## MCP Server
+The script is equipped with MCP-compatible logic based on **FastMCP** and located in `src/mcp_server/`. More on the configuration, the tools and on how to run at [MCP README](src/mcp_server/README.md).
