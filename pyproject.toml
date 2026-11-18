@@ -19,10 +19,12 @@ dependencies = [
     "mega.py",
     "pycryptodome",
     "tenacity",
+    "mcp>=1.0.0",
 ]
 
 [project.scripts]
 dcu = "main:run"
+dcu-mcp = "mcp_server.server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
